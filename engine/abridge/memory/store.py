@@ -71,6 +71,15 @@ class Memory:
                     (source_id, record.text[start : start + 1500]),
                 )
 
+    def delete_source(self, source_url: str) -> None:
+        with self.connect() as db:
+            row = db.execute(
+                "SELECT id FROM sources WHERE source_url = ?", (source_url,)
+            ).fetchone()
+            if row:
+                db.execute("DELETE FROM chunks WHERE source_id = ?", (row["id"],))
+                db.execute("DELETE FROM sources WHERE id = ?", (row["id"],))
+
     def search(self, query: str, limit: int = 5) -> list[Hit]:
         tokens = re.findall(r"[A-Za-z0-9]+", query)[:12]
         if not tokens:

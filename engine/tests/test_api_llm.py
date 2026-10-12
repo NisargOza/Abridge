@@ -199,3 +199,74 @@ async def test_real_llm_smoke() -> None:
     original = "Your appointment is on October 31, 2026. Bring this letter and a photo ID."
     output = await generate("document", original, Rewrite)
     validate_rewrite(original, output)
+
+
+@pytest.mark.parametrize("change", ["November", "$600", "will"])
+def test_month_money_and_certainty_are_preserved(change: str) -> None:
+    original = "Payment may arrive on October 31, 2026. Your amount is $500."
+    changed = (
+        original.replace("October", change)
+        if change == "November"
+        else original.replace("$500", change)
+        if change.startswith("$")
+        else original.replace("may", change)
+    )
+    with pytest.raises(LocalAIError):
+        validate_rewrite(original, Rewrite(title="Notice", plain_language=changed, action_items=[]))
+
+
+def test_source_chunks_are_deduplicated_and_numeric_substrings_rejected(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    memory = Memory(tmp_path / "memory.db")
+    text = "Lifeline support follows the 135% income guideline. " * 90
+    memory.ingest(
+        Record(
+            source_url="https://www.lifelinesupport.org/how-to-qualify/",
+            source_title="USAC",
+            text=text,
+            jurisdiction="US",
+        )
+    )
+    hit = memory.search("Lifeline")[0]
+    monkeypatch.setattr("abridge.api.main.Memory", lambda: memory)
+    household = {
+        "state": "NY",
+        "household_size": 1,
+        "monthly_gross_income": 1000,
+        "household_confirmed": True,
+        "lifeline_already_received": False,
+    }
+    with respx.mock() as mock:
+        route = mock.post("http://127.0.0.1:8080/v1/chat/completions").respond(
+            200,
+            json=response(
+                {
+                    "items": [
+                        {
+                            "source_id": hit.id,
+                            "excerpt": "Lifeline support follows the 135% income guideline.",
+                            "explanation": "Lifeline may help with phone costs.",
+                        }
+                    ]
+                }
+            ),
+        )
+        assert client.post("/api/explain", json={"household": household}).status_code == 200
+        payload = json.loads(json.loads(route.calls[0].request.content)["messages"][1]["content"])
+        assert len(payload) == 1
+        route.respond(
+            200,
+            json=response(
+                {
+                    "items": [
+                        {
+                            "source_id": hit.id,
+                            "excerpt": "Lifeline support follows the 135% income guideline.",
+                            "explanation": "Get 3 dollars.",
+                        }
+                    ]
+                }
+            ),
+        )
+        assert client.post("/api/explain", json={"household": household}).status_code == 503

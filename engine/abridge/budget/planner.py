@@ -1,4 +1,4 @@
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import ROUND_HALF_UP, Decimal, localcontext
 
 from abridge.models import BudgetInput, BudgetResult, Debt, PayoffPoint, Strategy
 
@@ -40,11 +40,15 @@ def simulate(debts: list[Debt], extra: int, method: str, affordable: bool) -> St
         )
     for month in range(1, 601) if active else []:
         for d in active:
-            interest = int(
-                (Decimal(balances[d.id]) * Decimal(str(d.apr)) / 1200).quantize(
-                    Decimal("1"), rounding=ROUND_HALF_UP
+            # The documented bounds permit large non-amortizing balances over 600 months.
+            # Keep decimal precision sufficient for the entire supported range.
+            with localcontext() as context:
+                context.prec = 60
+                interest = int(
+                    (Decimal(balances[d.id]) * Decimal(str(d.apr)) / 1200).quantize(
+                        Decimal("1"), rounding=ROUND_HALF_UP
+                    )
                 )
-            )
             balances[d.id] += interest
             interest_total += interest
         available = payment_pool

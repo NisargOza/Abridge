@@ -17,13 +17,13 @@ PUBLIC_EXCERPTS = [
         effective_to="2026-12-31",
     ),
     Record(
-        source_url="https://www.fna.usda.gov/schoolmeals/income-eligibility-guidelines",
+        source_url="https://www.govinfo.gov/content/pkg/FR-2026-04-09/pdf/2026-06842.pdf",
         source_title="USDA · School meals",
         text=(
-            "The Income Eligibility Guidelines are used to determine eligibility "
-            "for free and reduced price meals. They are effective from July 1 "
-            "through June 30 every year. Ask your school about the application and "
-            "participating programs."
+            "The Department’s guidelines for free meals and milk, and reduced price "
+            "meals were obtained by multiplying the year 2026 Federal income poverty "
+            "guidelines by 1.30 and 1.85, respectively, and by rounding the result "
+            "upward to the next whole dollar."
         ),
         jurisdiction="US",
         fetched_at="2026-10-12",
@@ -36,6 +36,7 @@ PUBLIC_EXCERPTS = [
 
 def main() -> None:
     memory = Memory()
+    memory.delete_source("https://www.fna.usda.gov/schoolmeals/income-eligibility-guidelines")
     for record in PUBLIC_EXCERPTS:
         memory.ingest(record)
     print("Installed reviewed public-source excerpts. No user data is stored.")

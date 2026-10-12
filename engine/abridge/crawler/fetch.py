@@ -110,7 +110,12 @@ class Crawler:
 async def verify_public_dns(domains: set[str]) -> None:
     loop = asyncio.get_running_loop()
     for domain in domains:
-        addresses = await loop.getaddrinfo(domain, 443, type=socket.SOCK_STREAM)
+        try:
+            addresses = await asyncio.wait_for(
+                loop.getaddrinfo(domain, 443, type=socket.SOCK_STREAM), timeout=10
+            )
+        except (OSError, TimeoutError) as exc:
+            raise CrawlError("Public-source DNS could not be verified.") from exc
         if not addresses or any(
             not ipaddress.ip_address(address[4][0]).is_global for address in addresses
         ):

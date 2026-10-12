@@ -1,28 +1,473 @@
-import { useState } from 'react'
-import { ArrowRight, Plus, Trash2, Wallet } from 'lucide-react'
-import { Button, ErrorBox, Field } from '../components/ui/Primitives'
-import { api } from '../lib/api'
-import type { BudgetInput, BudgetResult, Debt, Expenses, Household, Strategy } from '../lib/types'
-import { money, moneyExact } from '../lib/utils'
+import { useState } from "react";
+import { ArrowRight, Plus, Trash2, Wallet } from "lucide-react";
+import { Button, ErrorBox, Field } from "../components/ui/Primitives";
+import { api } from "../lib/api";
+import type {
+  BudgetInput,
+  BudgetResult,
+  Debt,
+  Expenses,
+  Household,
+  Strategy,
+} from "../lib/types";
+import { money, moneyExact } from "../lib/utils";
 
-const labels: Record<keyof Expenses, string> = { housing: 'Housing', utilities: 'Utilities & phone', food: 'Food', transport: 'Transport', health: 'Health & care', other: 'Other essentials' }
-const zeroExpenses: Expenses = { housing: 0, utilities: 0, food: 0, transport: 0, health: 0, other: 0 }
+const labels: Record<keyof Expenses, string> = {
+  housing: "Housing",
+  utilities: "Utilities & phone",
+  food: "Food",
+  transport: "Transport",
+  health: "Health & care",
+  other: "Other essentials",
+};
+const zeroExpenses: Expenses = {
+  housing: 0,
+  utilities: 0,
+  food: 0,
+  transport: 0,
+  health: 0,
+  other: 0,
+};
 const PayoffChart = ({ strategies }: { strategies: Strategy[] }) => {
-  const maxMonth = Math.max(1, ...strategies.flatMap(s => s.timeline.map(p => p.month)))
-  const maxBalance = Math.max(1, ...strategies.flatMap(s => s.timeline.map(p => p.balance)))
-  return <div className="payoff-chart"><svg viewBox="0 0 600 190" role="img" aria-label="Estimated debt balance over time. Full payoff numbers are listed in the strategy cards.">{[0,1,2,3].map(i => <line key={i} x1="42" x2="575" y1={20 + i * 43} y2={20 + i * 43} stroke="#e7e8e0"/>)}<text x="42" y="182" fontSize="11" fill="#59645e">Now</text><text x="507" y="182" fontSize="11" fill="#59645e">{maxMonth} months</text>{strategies.map((s,i) => <polyline key={s.name} fill="none" stroke={i === 0 ? '#254d40' : '#b26637'} strokeWidth="3" strokeDasharray={i ? '7 5' : undefined} points={s.timeline.map(p => `${42 + p.month / maxMonth * 530},${150 - p.balance / maxBalance * 125}`).join(' ')}/>)}</svg><div className="chart-legend"><span><i/>Avalanche</span><span><i/>Snowball</span></div></div>
-}
-export const BudgetPage = ({ initial, household, result, onResult }: { initial: BudgetInput | null; household: Household | null; result: BudgetResult | null; onResult: (b: BudgetInput, r: BudgetResult) => void }) => {
-  const [takehome, setTakehome] = useState(initial ? String(initial.monthly_take_home) : '')
-  const [gross, setGross] = useState(initial ? String(initial.monthly_gross_income) : household ? String(household.monthly_gross_income) : '')
-  const [expenses, setExpenses] = useState<Expenses>(initial?.expenses ?? zeroExpenses)
-  const [debts, setDebts] = useState<Debt[]>(initial?.debts ?? [])
-  const [extra, setExtra] = useState(String(initial?.extra_payment ?? 0))
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState('')
-  const [dirty, setDirty] = useState(false)
-  const updateDebt = (id: string, key: keyof Debt, value: string) => { setDirty(true); setDebts(old => old.map(d => d.id === id ? { ...d, [key]: key === 'name' ? value : Number(value) } : d)) }
-  const submit = async () => { setBusy(true); setError(''); const b: BudgetInput = { monthly_take_home: Number(takehome), monthly_gross_income: Number(gross), expenses, debts, extra_payment: Number(extra) }; try { onResult(b, await api.budget(b)); setDirty(false); setTimeout(() => document.getElementById('budget-result')?.focus(), 0) } catch (e) { setError(e instanceof Error ? e.message : 'Try again.') } finally { setBusy(false) } }
-  return <><div className="page-heading"><div><p className="eyebrow">MY MONEY PLAN</p><h1 tabIndex={-1}>A plan with room to breathe.</h1><p>Cover the basics first. Then see what a steady debt payment can do.</p></div></div><div className="budget-layout"><section className="panel"><h2>Your monthly picture</h2><p className="muted">Use a typical month. These entries stay in this session.</p><ErrorBox message={error}/><form autoComplete="off" onSubmit={e => { e.preventDefault(); void submit() }}><div className="two-fields"><Field id="takehome" label="Take-home income ($)" hint="What reaches your bank account." type="number" min="0" max="10000000" step="0.01" required value={takehome} onChange={e => { setTakehome(e.target.value); setDirty(true) }}/><Field id="gross" label="Income before taxes ($)" hint="Used only for the debt ratio." type="number" min="0" max="10000000" step="0.01" required value={gross} onChange={e => { setGross(e.target.value); setDirty(true) }}/></div><h3 className="form-section-title">Protect your essentials</h3><div className="two-fields">{(Object.keys(labels) as (keyof Expenses)[]).map(key => <Field key={key} id={`expense-${key}`} label={`${labels[key]} ($)`} hint={key === 'housing' ? 'If a housing loan payment is listed as a debt, leave it out here.' : undefined} type="number" min="0" max="10000000" step="0.01" required value={expenses[key]} onChange={e => { setExpenses({ ...expenses, [key]: Number(e.target.value) }); setDirty(true) }}/>)}</div><div className="section-heading"><h3 className="form-section-title">Your debts <span className="optional">optional</span></h3><Button type="button" variant="ghost" disabled={debts.length >= 20} onClick={() => { setDebts([...debts, { id: crypto.randomUUID(), name: '', balance: 0, apr: 0, minimum_payment: 0 }]); setDirty(true) }}><Plus size={17} aria-hidden="true"/>Add debt</Button></div>{debts.length === 0 && <p className="field-hint">No debts to add? You can still make a budget.</p>}{debts.map((d,i) => <fieldset className="debt-form" key={d.id}><legend>Debt {i + 1}</legend><div className="debt-name"><Field id={`name-${d.id}`} label="Name (use any nickname)" required maxLength={80} value={d.name} onChange={e => updateDebt(d.id, 'name', e.target.value)}/><Button type="button" variant="ghost" aria-label={`Remove debt ${i + 1}`} onClick={() => { setDebts(debts.filter(item => item.id !== d.id)); setDirty(true) }}><Trash2 size={17} aria-hidden="true"/></Button></div><div className="three-fields"><Field id={`balance-${d.id}`} label="Balance ($)" type="number" min="0" max="10000000" step="0.01" required value={d.balance} onChange={e => updateDebt(d.id, 'balance', e.target.value)}/><Field id={`apr-${d.id}`} label="APR (%)" type="number" min="0" max="100" step="0.01" required value={d.apr} onChange={e => updateDebt(d.id, 'apr', e.target.value)}/><Field id={`minimum-${d.id}`} label="Monthly minimum ($)" type="number" min="0" max="10000000" step="0.01" required value={d.minimum_payment} onChange={e => updateDebt(d.id, 'minimum_payment', e.target.value)}/></div></fieldset>)}<Field id="extra" label="Extra debt payment per month ($)" hint="We cap this at what remains after your essentials and minimums." type="number" min="0" max="10000000" step="0.01" required value={extra} onChange={e => { setExtra(e.target.value); setDirty(true) }}/><Button type="submit" busy={busy} className="full-button">Build my money plan<ArrowRight size={17} aria-hidden="true"/></Button></form></section>
-      <section className="budget-results" id="budget-result" tabIndex={-1} aria-label="Money plan results">{!result ? <div className="context-card"><Wallet size={27} aria-hidden="true"/><h2>A clear picture, without the pressure.</h2><p>Fill in your monthly costs to see what remains. Add debts to compare two repayment paths.</p><h3>Avalanche</h3><p>Pay the highest interest rate first. This often saves interest.</p><h3>Snowball</h3><p>Pay the smallest balance first. Early wins can help you keep going.</p></div> : <>{dirty && <div className="info-banner"><p>You changed your entries. Build the plan again to update these results.</p></div>}<div className={`balance-card ${result.funding_gap > 0 ? 'shortfall' : ''}`}><p>{result.funding_gap > 0 ? 'MONTHLY GAP' : 'AFTER ESSENTIALS & MINIMUMS'}</p><strong>{money(Math.abs(result.remaining))}</strong><span>{result.funding_gap > 0 ? 'Your costs are above take-home income. Start with support and hardship options.' : 'This money can support savings, unexpected costs, or extra debt payments.'}</span></div><div className="budget-breakdown"><div><span>Take-home income</span><strong>{money(initial?.monthly_take_home ?? Number(takehome))}</strong></div><div><span>Essentials</span><strong>{money(result.essentials)}</strong></div><div><span>Debt minimums</span><strong>{money(result.minimum_payments)}</strong></div><div><span>Funded extra payment</span><strong>{money(result.funded_extra)}</strong></div><div><span>Listed debt / gross income</span><strong>{result.dti_percentage === null ? 'Not available' : `${result.dti_percentage}%`}</strong></div><p>{result.dti_label}</p></div><div className="section-heading"><h2>Two paths through debt</h2></div><div className="strategy-grid">{result.strategies.map(s => <article className="strategy-card" key={s.name}><span className={`strategy-dot ${s.name}`}/><h3>{s.name === 'avalanche' ? 'Avalanche' : 'Snowball'}</h3><p>{s.name === 'avalanche' ? 'Highest interest first' : 'Smallest balance first'}</p><strong>{s.months === null ? 'Needs a different plan' : s.months === 0 ? 'No debt to repay' : `${s.months} months`}</strong><span>{moneyExact(s.interest)} estimated interest</span><details><summary>Payment order & assumptions</summary><ol>{s.order.map((name,i) => <li key={i}>{name}</li>)}</ol><p>{s.note}</p></details></article>)}</div><PayoffChart strategies={result.strategies}/><div className="plan-notes">{result.notes.map(n => <p key={n}>{n}</p>)}</div></> }</section></div></>
-}
+  const maxMonth = Math.max(
+    1,
+    ...strategies.flatMap((s) => s.timeline.map((p) => p.month)),
+  );
+  const maxBalance = Math.max(
+    1,
+    ...strategies.flatMap((s) => s.timeline.map((p) => p.balance)),
+  );
+  return (
+    <div className="payoff-chart">
+      <svg
+        viewBox="0 0 600 190"
+        role="img"
+        aria-label="Estimated debt balance over time. Full payoff numbers are listed in the strategy cards."
+      >
+        {[0, 1, 2, 3].map((i) => (
+          <line
+            key={i}
+            x1="42"
+            x2="575"
+            y1={20 + i * 43}
+            y2={20 + i * 43}
+            stroke="#e7e8e0"
+          />
+        ))}
+        <text x="42" y="182" fontSize="11" fill="#59645e">
+          Now
+        </text>
+        <text x="507" y="182" fontSize="11" fill="#59645e">
+          {maxMonth} months
+        </text>
+        {strategies.map((s, i) => (
+          <polyline
+            key={s.name}
+            fill="none"
+            stroke={i === 0 ? "#254d40" : "#b26637"}
+            strokeWidth="3"
+            strokeDasharray={i ? "7 5" : undefined}
+            points={s.timeline
+              .map(
+                (p) =>
+                  `${42 + (p.month / maxMonth) * 530},${150 - (p.balance / maxBalance) * 125}`,
+              )
+              .join(" ")}
+          />
+        ))}
+      </svg>
+      <div className="chart-legend">
+        <span>
+          <i />
+          Avalanche
+        </span>
+        <span>
+          <i />
+          Snowball
+        </span>
+      </div>
+    </div>
+  );
+};
+export const BudgetPage = ({
+  initial,
+  household,
+  result,
+  onResult,
+}: {
+  initial: BudgetInput | null;
+  household: Household | null;
+  result: BudgetResult | null;
+  onResult: (b: BudgetInput, r: BudgetResult) => void;
+}) => {
+  const [takehome, setTakehome] = useState(
+    initial ? String(initial.monthly_take_home) : "",
+  );
+  const [gross, setGross] = useState(
+    initial
+      ? String(initial.monthly_gross_income)
+      : household
+        ? String(household.monthly_gross_income)
+        : "",
+  );
+  const [expenses, setExpenses] = useState<Expenses>(
+    initial?.expenses ?? zeroExpenses,
+  );
+  const [debts, setDebts] = useState<Debt[]>(initial?.debts ?? []);
+  const [extra, setExtra] = useState(String(initial?.extra_payment ?? 0));
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [dirty, setDirty] = useState(false);
+  const updateDebt = (id: string, key: keyof Debt, value: string) => {
+    setDirty(true);
+    setDebts((old) =>
+      old.map((d) =>
+        d.id === id
+          ? { ...d, [key]: key === "name" ? value : Number(value) }
+          : d,
+      ),
+    );
+  };
+  const submit = async () => {
+    setBusy(true);
+    setError("");
+    const b: BudgetInput = {
+      monthly_take_home: Number(takehome),
+      monthly_gross_income: Number(gross),
+      expenses,
+      debts,
+      extra_payment: Number(extra),
+    };
+    try {
+      onResult(b, await api.budget(b));
+      setDirty(false);
+      setTimeout(() => document.getElementById("budget-result")?.focus(), 0);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <>
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">MY MONEY PLAN</p>
+          <h1 tabIndex={-1}>A plan with room to breathe.</h1>
+          <p>
+            Cover the basics first. Then see what a steady debt payment can do.
+          </p>
+        </div>
+      </div>
+      <div className="budget-layout">
+        <section className="panel">
+          <h2>Your monthly picture</h2>
+          <p className="muted">
+            Use a typical month. These entries stay in this session.
+          </p>
+          <ErrorBox message={error} />
+          <form
+            autoComplete="off"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void submit();
+            }}
+          >
+            <div className="two-fields">
+              <Field
+                id="takehome"
+                label="Take-home income ($)"
+                hint="What reaches your bank account."
+                type="number"
+                min="0"
+                max="10000000"
+                step="0.01"
+                required
+                value={takehome}
+                onChange={(e) => {
+                  setTakehome(e.target.value);
+                  setDirty(true);
+                }}
+              />
+              <Field
+                id="gross"
+                label="Income before taxes ($)"
+                hint="Used only for the debt ratio."
+                type="number"
+                min="0"
+                max="10000000"
+                step="0.01"
+                required
+                value={gross}
+                onChange={(e) => {
+                  setGross(e.target.value);
+                  setDirty(true);
+                }}
+              />
+            </div>
+            <h3 className="form-section-title">Protect your essentials</h3>
+            <div className="two-fields">
+              {(Object.keys(labels) as (keyof Expenses)[]).map((key) => (
+                <Field
+                  key={key}
+                  id={`expense-${key}`}
+                  label={`${labels[key]} ($)`}
+                  hint={
+                    key === "housing"
+                      ? "If a housing loan payment is listed as a debt, leave it out here."
+                      : undefined
+                  }
+                  type="number"
+                  min="0"
+                  max="10000000"
+                  step="0.01"
+                  required
+                  value={expenses[key]}
+                  onChange={(e) => {
+                    setExpenses({ ...expenses, [key]: Number(e.target.value) });
+                    setDirty(true);
+                  }}
+                />
+              ))}
+            </div>
+            <div className="section-heading">
+              <h3 className="form-section-title">
+                Your debts <span className="optional">optional</span>
+              </h3>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={debts.length >= 20}
+                onClick={() => {
+                  setDebts([
+                    ...debts,
+                    {
+                      id: crypto.randomUUID(),
+                      name: "",
+                      balance: 0,
+                      apr: 0,
+                      minimum_payment: 0,
+                    },
+                  ]);
+                  setDirty(true);
+                }}
+              >
+                <Plus size={17} aria-hidden="true" />
+                Add debt
+              </Button>
+            </div>
+            {debts.length === 0 && (
+              <p className="field-hint">
+                No debts to add? You can still make a budget.
+              </p>
+            )}
+            {debts.map((d, i) => (
+              <fieldset className="debt-form" key={d.id}>
+                <legend>Debt {i + 1}</legend>
+                <div className="debt-name">
+                  <Field
+                    id={`name-${d.id}`}
+                    label="Name (use any nickname)"
+                    required
+                    maxLength={80}
+                    value={d.name}
+                    onChange={(e) => updateDebt(d.id, "name", e.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    aria-label={`Remove debt ${i + 1}`}
+                    onClick={() => {
+                      setDebts(debts.filter((item) => item.id !== d.id));
+                      setDirty(true);
+                    }}
+                  >
+                    <Trash2 size={17} aria-hidden="true" />
+                  </Button>
+                </div>
+                <div className="three-fields">
+                  <Field
+                    id={`balance-${d.id}`}
+                    label="Balance ($)"
+                    type="number"
+                    min="0"
+                    max="10000000"
+                    step="0.01"
+                    required
+                    value={d.balance}
+                    onChange={(e) =>
+                      updateDebt(d.id, "balance", e.target.value)
+                    }
+                  />
+                  <Field
+                    id={`apr-${d.id}`}
+                    label="APR (%)"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    required
+                    value={d.apr}
+                    onChange={(e) => updateDebt(d.id, "apr", e.target.value)}
+                  />
+                  <Field
+                    id={`minimum-${d.id}`}
+                    label="Monthly minimum ($)"
+                    type="number"
+                    min="0"
+                    max="10000000"
+                    step="0.01"
+                    required
+                    value={d.minimum_payment}
+                    onChange={(e) =>
+                      updateDebt(d.id, "minimum_payment", e.target.value)
+                    }
+                  />
+                </div>
+              </fieldset>
+            ))}
+            <Field
+              id="extra"
+              label="Extra debt payment per month ($)"
+              hint="We cap this at what remains after your essentials and minimums."
+              type="number"
+              min="0"
+              max="10000000"
+              step="0.01"
+              required
+              value={extra}
+              onChange={(e) => {
+                setExtra(e.target.value);
+                setDirty(true);
+              }}
+            />
+            <Button type="submit" busy={busy} className="full-button">
+              Build my money plan
+              <ArrowRight size={17} aria-hidden="true" />
+            </Button>
+          </form>
+        </section>
+        <section
+          className="budget-results"
+          id="budget-result"
+          tabIndex={-1}
+          aria-label="Money plan results"
+        >
+          {!result ? (
+            <div className="context-card">
+              <Wallet size={27} aria-hidden="true" />
+              <h2>A clear picture, without the pressure.</h2>
+              <p>
+                Fill in your monthly costs to see what remains. Add debts to
+                compare two repayment paths.
+              </p>
+              <h3>Avalanche</h3>
+              <p>
+                Pay the highest interest rate first. This often saves interest.
+              </p>
+              <h3>Snowball</h3>
+              <p>
+                Pay the smallest balance first. Early wins can help you keep
+                going.
+              </p>
+            </div>
+          ) : (
+            <>
+              {dirty && (
+                <div className="info-banner">
+                  <p>
+                    You changed your entries. Build the plan again to update
+                    these results.
+                  </p>
+                </div>
+              )}
+              <div
+                className={`balance-card ${result.funding_gap > 0 ? "shortfall" : ""}`}
+              >
+                <p>
+                  {result.funding_gap > 0
+                    ? "MONTHLY GAP"
+                    : "AFTER ESSENTIALS & MINIMUMS"}
+                </p>
+                <strong>{money(Math.abs(result.remaining))}</strong>
+                <span>
+                  {result.funding_gap > 0
+                    ? "Your costs are above take-home income. Start with support and hardship options."
+                    : "This money can support savings, unexpected costs, or extra debt payments."}
+                </span>
+              </div>
+              <div className="budget-breakdown">
+                <div>
+                  <span>Take-home income</span>
+                  <strong>
+                    {money(initial?.monthly_take_home ?? Number(takehome))}
+                  </strong>
+                </div>
+                <div>
+                  <span>Essentials</span>
+                  <strong>{money(result.essentials)}</strong>
+                </div>
+                <div>
+                  <span>Debt minimums</span>
+                  <strong>{money(result.minimum_payments)}</strong>
+                </div>
+                <div>
+                  <span>Funded extra payment</span>
+                  <strong>{money(result.funded_extra)}</strong>
+                </div>
+                <div>
+                  <span>Listed debt / gross income</span>
+                  <strong>
+                    {result.dti_percentage === null
+                      ? "Not available"
+                      : `${result.dti_percentage}%`}
+                  </strong>
+                </div>
+                <p>{result.dti_label}</p>
+              </div>
+              <div className="section-heading">
+                <h2>Two paths through debt</h2>
+              </div>
+              <div className="strategy-grid">
+                {result.strategies.map((s) => (
+                  <article className="strategy-card" key={s.name}>
+                    <span className={`strategy-dot ${s.name}`} />
+                    <h3>{s.name === "avalanche" ? "Avalanche" : "Snowball"}</h3>
+                    <p>
+                      {s.name === "avalanche"
+                        ? "Highest interest first"
+                        : "Smallest balance first"}
+                    </p>
+                    <strong>
+                      {s.months === null
+                        ? "Needs a different plan"
+                        : s.months === 0
+                          ? "No debt to repay"
+                          : `${s.months} months`}
+                    </strong>
+                    <span>{moneyExact(s.interest)} estimated interest</span>
+                    <details>
+                      <summary>Payment order & assumptions</summary>
+                      <ol>
+                        {s.order.map((name, i) => (
+                          <li key={i}>{name}</li>
+                        ))}
+                      </ol>
+                      <p>{s.note}</p>
+                    </details>
+                  </article>
+                ))}
+              </div>
+              <PayoffChart strategies={result.strategies} />
+              <div className="plan-notes">
+                {result.notes.map((n) => (
+                  <p key={n}>{n}</p>
+                ))}
+              </div>
+            </>
+          )}
+        </section>
+      </div>
+    </>
+  );
+};

@@ -25,10 +25,16 @@ class Seeds(Boundary):
 async def crawl(path: Path) -> None:
     config = Seeds.model_validate(yaml.safe_load(path.read_text()))
     domains = set(config.allowed_domains)
-    await verify_public_dns(domains)
+    verified_domains: set[str] = set()
+    for domain in sorted(domains):
+        try:
+            await verify_public_dns({domain})
+            verified_domains.add(domain)
+        except CrawlError as exc:
+            print(f"Skipped public domain {domain}: {exc}")
     memory = Memory()
     async with httpx.AsyncClient(timeout=20, trust_env=False) as client:
-        crawler = Crawler(client, domains)
+        crawler = Crawler(client, verified_domains)
         for seed in config.seeds:
             try:
                 record = await crawler.fetch(seed.url, seed.jurisdiction, seed.rule_year)

@@ -2,7 +2,6 @@ allowed_domains:
   - aspe.hhs.gov
   - www.lifelinesupport.org
   - www.fns.usda.gov
-  - www.fna.usda.gov
   - www.medicaid.gov
 seeds:
   - url: https://aspe.hhs.gov/poverty-guidelines
@@ -19,5 +18,5 @@ seeds:
     rule_year: '2026–2027'
   - url: https://www.fns.usda.gov/snap/recipient/eligibility
     jurisdiction: US
-  - url: https://www.medicaid.gov/medicaid/eligibility/index.html
+  - url: https://www.medicaid.gov/medicaid/eligibility-policy
     jurisdiction: US

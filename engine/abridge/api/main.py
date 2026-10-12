@@ -10,8 +10,8 @@ from fastapi.responses import JSONResponse, Response
 
 from abridge.budget.planner import plan
 from abridge.eligibility.rules import screen
-from abridge.llm.client import LocalAIError, available, generate, validate_rewrite
-from abridge.memory.store import Memory
+from abridge.llm.client import LocalAIError, available, generate, numeric_tokens, validate_rewrite
+from abridge.memory.store import Hit, Memory
 from abridge.models import (
     BudgetInput,
     BudgetResult,
@@ -110,6 +110,16 @@ async def document(data: DocumentInput) -> DocumentResult:
     try:
         rewrite = await generate("document", data.text, Rewrite)
         validate_rewrite(data.text, rewrite)
+        # Actions must be source excerpts. Drop AI-added or paraphrased action claims.
+        rewrite = rewrite.model_copy(
+            update={
+                "action_items": [
+                    action
+                    for action in rewrite.action_items
+                    if action.casefold() in data.text.casefold()
+                ]
+            }
+        )
         return DocumentResult(
             mode="local_ai",
             rewrite=rewrite,
@@ -138,8 +148,10 @@ async def explain(data: ExplanationInput) -> ExplanationResult:
         raise HTTPException(
             503, "No public source excerpts are available. Run the separate source updater."
         )
-    source_map = {h.id: h for h in hits}
-    payload = json.dumps([{"source_id": h.id, "text": h.text} for h in hits])
+    source_map: dict[str, Hit] = {}
+    for candidate in hits:
+        source_map.setdefault(candidate.id, candidate)
+    payload = json.dumps([{"source_id": h.id, "text": h.text} for h in source_map.values()])
     try:
         output = await generate("explain", payload, Explanation)
         for item in output.items:
@@ -150,7 +162,7 @@ async def explain(data: ExplanationInput) -> ExplanationResult:
                 or re.search(r"https?://|www\.", item.explanation)
             ):
                 raise LocalAIError("An explanation had an invalid citation.")
-            if any(n not in hit.text for n in re.findall(r"\d[\d,./:%-]*", item.explanation)):
+            if not set(numeric_tokens(item.explanation)).issubset(numeric_tokens(hit.text)):
                 raise LocalAIError("An explanation added an unsupported number.")
         return ExplanationResult(
             items=[

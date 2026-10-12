@@ -73,11 +73,19 @@ async def generate[T: BaseModel](prompt_name: str, payload: str, schema: type[T]
         raise LocalAIError("Local AI is unavailable or returned an invalid response.") from exc
 
 
+NUMBER_PATTERN = r"[$€£]?[+-]?\d+(?:[,.]\d+)*(?:[/-]\d+)*(?:%|:\d{2})?"
+
+
+def numeric_tokens(text: str) -> list[str]:
+    return re.findall(NUMBER_PATTERN, text)
+
+
 def anchors(text: str) -> list[str]:
     return re.findall(
-        r"[$€£]?\d[\d,./:%-]*|[<>≤≥]|"
-        r"\b(?:if|unless|only|must|before|after|until|not|percent|"
-        r"january|february|march|april|may|june|july|august|"
+        NUMBER_PATTERN + r"|[<>≤≥]|"
+        r"\b(?:if|unless|only|must|before|after|until|not|no|never|cannot|"
+        r"without|except|may|might|can|could|will|should|shall|required|percent|"
+        r"january|february|march|april|june|july|august|"
         r"september|october|november|december)\b",
         text.lower(),
     )

@@ -99,3 +99,18 @@ def test_cent_rounding_and_duplicate_debt_validation() -> None:
     debt = Debt(id="same", name="Bill", balance=100, apr=0, minimum_payment=20)
     with pytest.raises(ValidationError):
         BudgetInput(monthly_take_home=1000, monthly_gross_income=1000, debts=[debt, debt])
+
+
+def test_maximum_supported_nonamortizing_input_stays_bounded() -> None:
+    result = plan(
+        BudgetInput(
+            monthly_take_home=1000,
+            monthly_gross_income=1000,
+            debts=[
+                Debt(id="max", name="Stress test", balance=10_000_000, apr=100, minimum_payment=1)
+            ],
+        )
+    )
+    assert result.strategies[0].months is None
+    assert len(result.strategies[0].timeline) <= 63
+    assert result.strategies[0].interest > 0

@@ -16,7 +16,7 @@ SOURCES = {
     ),
     "school": Source(
         id="usda-meals-2026",
-        source_url="https://www.fna.usda.gov/schoolmeals/income-eligibility-guidelines",
+        source_url="https://www.govinfo.gov/content/pkg/FR-2026-04-09/pdf/2026-06842.pdf",
         source_title="USDA · School meal income guidelines",
         fetched_at="2026-10-12",
         rule_year="2026–2027",
@@ -25,7 +25,7 @@ SOURCES = {
     ),
     "wic": Source(
         id="usda-wic-2026",
-        source_url="https://www.fna.usda.gov/wic/fr-042926",
+        source_url="https://www.govinfo.gov/content/pkg/FR-2026-04-29/pdf/2026-08323.pdf",
         source_title="USDA · WIC income guidelines",
         fetched_at="2026-10-12",
         rule_year="2026–2027",
@@ -43,7 +43,7 @@ SOURCES = {
     ),
     "medicaid": Source(
         id="cms-medicaid",
-        source_url="https://www.medicaid.gov/medicaid/eligibility/index.html",
+        source_url="https://www.medicaid.gov/medicaid/eligibility-policy",
         source_title="CMS · Medicaid eligibility",
         fetched_at="2026-10-12",
         rule_year="Information only",

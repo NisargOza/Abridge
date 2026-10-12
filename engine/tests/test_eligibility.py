@@ -110,3 +110,14 @@ def test_unverified_programs_are_not_calculated() -> None:
 
 def test_expired_rules_fail_closed() -> None:
     assert all(p.status == Status.MORE for p in screen(household(), date(2028, 1, 1)).programs)
+
+
+@pytest.mark.parametrize("state,free,reduced", [("AK", 2162, 3076), ("HI", 1989, 2831)])
+def test_school_region_monthly_goldens(state: str, free: int, reduced: int) -> None:
+    p = screen(household(state=state, monthly_gross_income=free), TODAY).programs[1]
+    assert p.status == Status.ELIGIBLE and "free" in p.reason
+    p = screen(household(state=state, monthly_gross_income=reduced), TODAY).programs[1]
+    assert p.status == Status.ELIGIBLE and "reduced-price" in p.reason
+    assert p.income_limit_monthly == reduced
+    p = screen(household(state=state, monthly_gross_income=reduced + 0.01), TODAY).programs[1]
+    assert p.status == Status.INELIGIBLE

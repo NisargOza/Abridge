@@ -80,3 +80,14 @@ def test_allowlist_rejects_invalid_urls(url: str) -> None:
         crawler = Crawler(httpx.AsyncClient(), {"agency.gov"})
         with pytest.raises(CrawlError):
             crawler.check_url(url)
+
+
+def test_delete_obsolete_public_source_removes_fts_chunks(tmp_path: Path) -> None:
+    memory = Memory(tmp_path / "memory.db")
+    url = "https://agency.gov/obsolete"
+    memory.ingest(
+        Record(source_url=url, source_title="Old", text="Old program guidance", jurisdiction="US")
+    )
+    assert memory.search("Old")
+    memory.delete_source(url)
+    assert memory.search("Old") == []

@@ -16,7 +16,7 @@ All dependencies are free/open-source, need no API keys or paid account, and are
 | Lucide React | ISC |
 | Playwright | Apache-2.0 |
 | axe-core / @axe-core/playwright | MPL-2.0 |
-| Testing Library, ESLint, typescript-eslint | MIT |
+| Testing Library, ESLint, typescript-eslint, Prettier | MIT |
 | pytest | MIT |
 | Ruff | MIT |
 | mypy | MIT |

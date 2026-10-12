@@ -5,7 +5,7 @@
 - [x] Build loopback-only FastAPI: validated inputs, versioned poverty guidelines, bounded prescreen adapters, budget/debt simulation.
 - [x] Build public-source SQLite FTS5 memory, safe allowlisted crawler, and constrained local LLM/document assistance.
 - [x] Build polished accessible React PWA: onboarding, benefit results, budget/debt tools, document simplification, privacy controls.
-- [ ] Validate backend/frontend, real API integration, browser flows/accessibility, and available local LLM.
+- [x] Validate backend/frontend, real API integration, browser flows/accessibility, and available local LLM.
 - [ ] Complete setup/security/rule documentation, commit milestones, and push to configured GitHub repository.
 
 ## Decisions and verification
@@ -16,8 +16,10 @@ The user authorized routine engineering decisions, including the free dependenci
 
 ## Limitations
 
-None confirmed yet. Mark optional AI as unavailable when the local runtime is absent; never return fabricated AI responses.
+Native PDF parsing/OCR and mobile inference are outside the implemented desktop scope. WIC, SNAP, and Medicaid remain information-only because required program facts are unavailable. Some government sites block automated fetches; the updater skips them, retains existing knowledge, and deterministic rules cite verified Federal Register alternatives. AI semantic equivalence cannot be proven by token checks; originals remain visible and unsafe outputs fail closed.
 
 ## Progress
 
-Backend: 52 tests pass. Frontend: 3 tests pass. Strict typechecks, lint, and production build pass. The actual pinned Gemma runtime and structured document rewrite are verified. Browser integration and accessibility are in progress; a development CSP mismatch was found and fixed. See docs/VERIFIED_ASSUMPTIONS.md for capability boundaries and primary sources.
+Backend: 60 tests pass; 1 optional real Gemma smoke evaluation passes. Frontend: 3 unit tests and 4 real-FastAPI Playwright flows pass. Strict mypy / TypeScript, Ruff / ESLint, formatting, and production build pass. Axe finds no WCAG 2.2 AA violations on covered page states. Keyboard skip/focus behavior, mobile 320/390 px reflow, and 200% zoom were checked. Production shell loads offline; cache inventory contains only shell/assets, never API or financial data. Actual local document rewriting and public-source explanations with mapped citations have been verified. Setup script was run successfully; shell scripts pass syntax checks.
+
+Fixed discovered failures: React development preamble CSP, text contrast, mobile clear-button label, initial keyboard focus, duplicate source chunks, numeric substring validation, non-amortizing decimal overflow, unresolved source domains, and outdated government links. The crawler fetched HHS/Lifeline, safely skipped restricted pages, and continued. CI now reproduces lint, typechecks, unit, build, and browser checks on Linux. See docs/VERIFIED_ASSUMPTIONS.md for capability boundaries and primary sources.
