@@ -1,0 +1,22 @@
+allowed_domains:
+  - aspe.hhs.gov
+  - www.lifelinesupport.org
+  - www.fns.usda.gov
+  - www.medicaid.gov
+seeds:
+  - url: https://aspe.hhs.gov/poverty-guidelines
+    jurisdiction: US
+    rule_year: '2026'
+  - url: https://www.lifelinesupport.org/how-to-qualify/
+    jurisdiction: US
+    rule_year: '2026'
+  - url: https://www.fns.usda.gov/schoolmeals/income-eligibility-guidelines
+    jurisdiction: US
+    rule_year: '2026–2027'
+  - url: https://www.fns.usda.gov/wic/fr-042926
+    jurisdiction: US
+    rule_year: '2026–2027'
+  - url: https://www.fns.usda.gov/snap/recipient/eligibility
+    jurisdiction: US
+  - url: https://www.medicaid.gov/medicaid/eligibility-policy
+    jurisdiction: US
