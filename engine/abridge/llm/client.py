@@ -82,7 +82,7 @@ def numeric_tokens(text: str) -> list[str]:
 
 def anchors(text: str) -> list[str]:
     return re.findall(
-        NUMBER_PATTERN + r"|[<>≤≥]|"
+        NUMBER_PATTERN + r"|[<>≤≥]|\b\w+n['’]t\b|"
         r"\b(?:if|unless|only|must|before|after|until|not|no|never|cannot|"
         r"without|except|may|might|can|could|will|should|shall|required|percent|"
         r"january|february|march|april|june|july|august|"

@@ -270,3 +270,17 @@ def test_source_chunks_are_deduplicated_and_numeric_substrings_rejected(
             ),
         )
         assert client.post("/api/explain", json={"household": household}).status_code == 503
+
+
+@pytest.mark.parametrize(
+    "original, changed",
+    [
+        ("You can't apply after October 31, 2026.", "You can apply after October 31, 2026."),
+        ("You don't need to pay $500.", "You do need to pay $500."),
+        ("You won't receive $500.", "You will receive $500."),
+        ("You shouldn’t send $500.", "You should send $500."),
+    ],
+)
+def test_contracted_negations_cannot_be_removed(original: str, changed: str) -> None:
+    with pytest.raises(LocalAIError):
+        validate_rewrite(original, Rewrite(title="Notice", plain_language=changed, action_items=[]))

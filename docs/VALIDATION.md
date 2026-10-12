@@ -4,7 +4,7 @@ Verified locally on macOS Apple Silicon, Node 24.16, Python 3.12.13, and llama.c
 
 | Check | Result |
 | --- | --- |
-| pytest unit/integration | 60 passed; real LLM test deselected |
+| pytest unit/integration | 64 passed; real LLM test deselected |
 | optional real Gemma evaluation | 1 passed |
 | PolicyEngine regional HHS audit | 12 goldens match |
 | Ruff lint and format | pass |
