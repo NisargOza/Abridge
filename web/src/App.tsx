@@ -1,15 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
-  ArrowUpRight,
-  BookOpenText,
-  Check,
   ChevronRight,
-  CircleHelp,
   FileText,
   HeartHandshake,
   LayoutDashboard,
-  LockKeyhole,
   Menu,
   ShieldCheck,
   Sparkles,
@@ -18,7 +13,6 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import { Button, ErrorBox } from "./components/ui/Primitives";
 import { api, clearPendingRequests } from "./lib/api";
 import type {
   BudgetInput,
@@ -27,7 +21,8 @@ import type {
   Household,
   Screening,
 } from "./lib/types";
-import { money } from "./lib/utils";
+import { WelcomeHeader, WelcomePage } from "./pages/WelcomePage";
+import { OverviewPage } from "./pages/OverviewPage";
 import { CheckPage } from "./pages/CheckPage";
 import { BenefitsPage } from "./pages/BenefitsPage";
 import { BudgetPage } from "./pages/BudgetPage";
@@ -42,49 +37,6 @@ const navigation = [
   { id: "budget", label: "My money plan", icon: Wallet },
   { id: "documents", label: "Understand a document", icon: FileText },
 ] as const;
-
-const Bridge = () => (
-  <svg viewBox="0 0 330 205" className="bridge-art" aria-hidden="true">
-    <circle cx="256" cy="46" r="25" fill="#e6b573" />
-    <path d="M0 181Q81 150 159 176T330 178V205H0" fill="#496558" />
-    <path
-      d="M47 158V126a118 118 0 0 1 236 0v32"
-      fill="none"
-      stroke="#719182"
-      strokeWidth="24"
-    />
-    <path
-      d="M75 158V129a90 90 0 0 1 180 0v29"
-      fill="none"
-      stroke="#dce5d4"
-      strokeWidth="17"
-    />
-    <path
-      d="M105 158V134a60 60 0 0 1 120 0v24"
-      fill="none"
-      stroke="#b9cbb6"
-      strokeWidth="13"
-    />
-    <path
-      d="M28 162h273"
-      stroke="#eddfba"
-      strokeWidth="9"
-      strokeLinecap="round"
-    />
-    <path
-      d="M11 193q58-13 107 0t92 0t111 0"
-      fill="none"
-      stroke="#98afa0"
-      strokeWidth="2"
-    />
-    <path
-      d="M311 157v-31m0 13-13-13m13 7 10-15"
-      stroke="#a8c0a4"
-      strokeWidth="3"
-      fill="none"
-    />
-  </svg>
-);
 
 export const App = () => {
   const [session, setSession] = useState(0);
@@ -120,6 +72,7 @@ const Session = ({ reset }: { reset: () => void }) => {
   const main = useRef<HTMLElement>(null);
   const previousPage = useRef<Page>("home");
   const alive = useRef(true);
+  const sampleAttempt = useRef(0);
   useEffect(() => {
     alive.current = true;
     void api
@@ -141,12 +94,15 @@ const Session = ({ reset }: { reset: () => void }) => {
     document.title = `Abridge · ${page === "home" ? "A little breathing room" : page === "check" ? "Check for support" : (navigation.find((n) => n.id === page)?.label ?? "Your privacy")}`;
   }, [page]);
   const navigate = (target: Page) => {
+    sampleAttempt.current += 1;
+    setSampleBusy(false);
     setPage(target);
     setMobileMenu(false);
     setError("");
     window.scrollTo({ top: 0, behavior: "instant" });
   };
   const explore = async () => {
+    const attempt = ++sampleAttempt.current;
     setSampleBusy(true);
     setError("");
     const h: Household = {
@@ -189,18 +145,34 @@ const Session = ({ reset }: { reset: () => void }) => {
     };
     try {
       const [s, r] = await Promise.all([api.screen(h), api.budget(b)]);
-      if (!alive.current) return;
+      if (!alive.current || attempt !== sampleAttempt.current) return;
       setHousehold(h);
       setScreening(s);
       setBudgetInput(b);
       setBudgetResult(r);
       setSample(true);
+      navigate("benefits");
     } catch (e) {
-      if (alive.current)
+      if (alive.current && attempt === sampleAttempt.current)
         setError(e instanceof Error ? e.message : "Try again.");
     } finally {
-      if (alive.current) setSampleBusy(false);
+      if (alive.current && attempt === sampleAttempt.current)
+        setSampleBusy(false);
     }
+  };
+  const startCheck = () => {
+    if (sample) {
+      setHousehold(null);
+      setScreening(null);
+      setBudgetInput(null);
+      setBudgetResult(null);
+      setSample(false);
+    }
+    navigate("check");
+  };
+  const chooseTool = (target: "check" | "budget" | "documents" | "privacy") => {
+    if (target === "check") startCheck();
+    else navigate(target);
   };
   const complete = (h: Household, s: Screening) => {
     setHousehold(h);
@@ -211,293 +183,137 @@ const Session = ({ reset }: { reset: () => void }) => {
   const likely =
     screening?.programs.filter((p) => p.status === "likely_eligible").length ??
     0;
+  const isWelcome = page === "home" && !household && !budgetInput;
   return (
-    <div className="app-layout">
+    <div className={`app-layout ${isWelcome ? "welcome-layout" : ""}`}>
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <aside
-        className={`sidebar ${mobileMenu ? "is-open" : ""}`}
-        aria-label="Main navigation"
-      >
-        <div className="brand-row">
-          <button
-            className="brand"
-            onClick={() => navigate("home")}
-            aria-label="Abridge home"
-          >
-            <img src="/icon.svg" alt="" />
-            <span>
-              abridge<span className="brand-dot">.</span>
-            </span>
-          </button>
-          <button
-            className="menu-toggle"
-            aria-label={mobileMenu ? "Close navigation" : "Open navigation"}
-            aria-expanded={mobileMenu}
-            onClick={() => setMobileMenu(!mobileMenu)}
-          >
-            {mobileMenu ? <X /> : <Menu />}
-          </button>
-        </div>
-        <div className="sidebar-tagline">A little help. A way forward.</div>
-        <nav className="nav-items">
-          {navigation.map(({ id, label, icon: Icon }) => (
+      {!isWelcome && (
+        <aside
+          className={`sidebar ${mobileMenu ? "is-open" : ""}`}
+          aria-label="Main navigation"
+        >
+          <div className="brand-row">
             <button
-              key={id}
-              onClick={() => navigate(id)}
-              className={`nav-item ${page === id || (id === "benefits" && page === "check") ? "active" : ""}`}
-              aria-current={page === id ? "page" : undefined}
+              className="brand"
+              onClick={() => navigate("home")}
+              aria-label="Abridge home"
             >
-              <Icon size={20} aria-hidden="true" />
-              {label}
-              {page === id && <span className="nav-dot" />}
+              <img src="/icon.svg" alt="" />
+              <span>
+                abridge<span className="brand-dot">.</span>
+              </span>
             </button>
-          ))}
-        </nav>
-        <div className="sidebar-bottom">
-          <div className="privacy-mini">
-            <div className="icon-box">
-              <LockKeyhole size={19} aria-hidden="true" />
+            <button
+              className="menu-toggle"
+              aria-label={mobileMenu ? "Close navigation" : "Open navigation"}
+              aria-expanded={mobileMenu}
+              onClick={() => setMobileMenu(!mobileMenu)}
+            >
+              {mobileMenu ? <X /> : <Menu />}
+            </button>
+          </div>
+          <div className="sidebar-tagline">A little help. A way forward.</div>
+          <nav className="nav-items">
+            {navigation.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => navigate(id)}
+                className={`nav-item ${page === id || (id === "benefits" && page === "check") ? "active" : ""}`}
+                aria-current={page === id ? "page" : undefined}
+              >
+                <Icon size={20} aria-hidden="true" />
+                {label}
+                {page === id && <span className="nav-dot" />}
+              </button>
+            ))}
+          </nav>
+          <div className="sidebar-bottom">
+            <button
+              className="nav-item privacy-nav"
+              onClick={() => navigate("privacy")}
+              aria-current={page === "privacy" ? "page" : undefined}
+            >
+              <ShieldCheck size={20} aria-hidden="true" />
+              Privacy & local setup
+            </button>
+            <div className="sidebar-foot">
+              MADE FOR PEOPLE, NOT PROFIT{" "}
+              <Sprout size={14} aria-hidden="true" />
             </div>
-            <strong>Your story stays yours.</strong>
-            <p>Your information stays on this device. Always.</p>
-            <button onClick={() => navigate("privacy")}>
-              How we protect your privacy{" "}
-              <ArrowUpRight size={14} aria-hidden="true" />
-            </button>
           </div>
-          <button
-            className="nav-item privacy-nav"
-            onClick={() => navigate("privacy")}
-            aria-current={page === "privacy" ? "page" : undefined}
-          >
-            <ShieldCheck size={20} aria-hidden="true" />
-            Privacy & local setup
-          </button>
-          <div className="sidebar-foot">
-            MADE FOR PEOPLE, NOT PROFIT <Sprout size={14} aria-hidden="true" />
-          </div>
-        </div>
-      </aside>
+        </aside>
+      )}
       <div className="workspace">
-        <header className="topbar">
-          <span className="breadcrumb">
-            Your space <ChevronRight size={14} aria-hidden="true" />{" "}
-            <strong>
-              {page === "check"
-                ? "Check for support"
-                : page === "privacy"
-                  ? "Privacy & setup"
-                  : navigation.find((n) => n.id === page)?.label}
-            </strong>
-          </span>
-          <div className="topbar-right">
-            <span className="private-badge">
-              <span className="status-dot" />
-              Private by design
+        {isWelcome ? (
+          <WelcomeHeader
+            onHome={() => navigate("home")}
+            onChoose={chooseTool}
+          />
+        ) : (
+          <header className="topbar">
+            <span className="breadcrumb">
+              Your space <ChevronRight size={14} aria-hidden="true" />{" "}
+              <strong>
+                {page === "check"
+                  ? "Check for support"
+                  : page === "privacy"
+                    ? "Privacy & setup"
+                    : navigation.find((n) => n.id === page)?.label}
+              </strong>
             </span>
-            <button
-              className="clear-button"
-              aria-label="Clear session"
-              onClick={reset}
-            >
-              <Trash2 size={15} aria-hidden="true" />
-              <span>Clear session</span>
-            </button>
-          </div>
-        </header>
+            <div className="topbar-right">
+              <span className="private-badge">
+                <span className="status-dot" />
+                Private by design
+              </span>
+              <button
+                className="clear-button"
+                aria-label="Clear session"
+                onClick={reset}
+              >
+                <Trash2 size={15} aria-hidden="true" />
+                <span>Clear session</span>
+              </button>
+            </div>
+          </header>
+        )}
         <main id="main" ref={main} className="main-content">
           {sample && (
             <div className="sample-banner">
               <Sparkles size={16} aria-hidden="true" />
               <span>
-                You’re exploring sample data. These are not your personal
-                results.
+                Sample household · 3 people in New York. These are made-up
+                details.
               </span>
-              <button onClick={() => navigate("check")}>
+              <button onClick={startCheck}>
                 Use my information <ArrowRight size={14} aria-hidden="true" />
               </button>
             </div>
           )}
-          {page === "home" && (
-            <>
-              <div className="page-heading">
-                <div>
-                  <p className="eyebrow">ONE SMALL STEP AT A TIME</p>
-                  <h1 tabIndex={-1}>
-                    {household
-                      ? "Welcome back to your space."
-                      : "Let’s find your way forward."}
-                  </h1>
-                  <p>
-                    Money can feel heavy. You don’t have to figure it all out at
-                    once.
-                  </p>
-                </div>
-                <span className="quiet-label">
-                  <LockKeyhole size={15} aria-hidden="true" />
-                  No account needed
-                </span>
-              </div>
-              <ErrorBox message={error} />
-              <section className="hero">
-                <div className="hero-copy">
-                  <div className="hero-eyebrow">
-                    <span /> A LITTLE HELP CAN GO A LONG WAY
-                  </div>
-                  <h2>
-                    A little breathing room.
-                    <br />
-                    <em>A clearer next step.</em>
-                  </h2>
-                  <p>
-                    Find support you may qualify for, make a money plan, and
-                    turn confusing paperwork into plain words.
-                  </p>
-                  <Button onClick={() => navigate("check")}>
-                    {household
-                      ? "Update my support check"
-                      : "Find support for me"}
-                    <ArrowRight size={18} aria-hidden="true" />
-                  </Button>
-                  <div className="hero-note">
-                    <ShieldCheck size={15} aria-hidden="true" />
-                    Free to use. No judgment. Just support.
-                  </div>
-                </div>
-                <Bridge />
-              </section>
-              <div className="section-heading">
-                <h2>
-                  {household ? "Your next steps" : "Start wherever you are"}
-                </h2>
-                <span>YOU SET THE PACE</span>
-              </div>
-              <div className="tool-grid">
-                <button
-                  className="tool-card"
-                  onClick={() => navigate(household ? "benefits" : "check")}
-                >
-                  <span className="tool-icon sage">
-                    <HeartHandshake size={25} aria-hidden="true" />
-                  </span>
-                  <span className="tool-title">
-                    Find a little support{" "}
-                    <ArrowUpRight size={19} aria-hidden="true" />
-                  </span>
-                  <span className="tool-description">
-                    Explore help with food, health care, phone bills, and more.
-                  </span>
-                  <span className="tool-footer">
-                    {screening
-                      ? `${likely} income checks within limits`
-                      : "A few questions to get started"}
-                    <ArrowRight size={16} aria-hidden="true" />
-                  </span>
-                </button>
-                <button
-                  className="tool-card"
-                  onClick={() => navigate("budget")}
-                >
-                  <span className="tool-icon peach">
-                    <Wallet size={25} aria-hidden="true" />
-                  </span>
-                  <span className="tool-title">
-                    Make room in your budget{" "}
-                    <ArrowUpRight size={19} aria-hidden="true" />
-                  </span>
-                  <span className="tool-description">
-                    See what’s coming in, what’s going out, and a debt plan that
-                    fits.
-                  </span>
-                  <span className="tool-footer">
-                    {budgetResult
-                      ? `${money(budgetResult.remaining)} after listed costs`
-                      : "Small steps, a clearer picture"}
-                    <ArrowRight size={16} aria-hidden="true" />
-                  </span>
-                </button>
-                <button
-                  className="tool-card"
-                  onClick={() => navigate("documents")}
-                >
-                  <span className="tool-icon lavender">
-                    <BookOpenText size={25} aria-hidden="true" />
-                  </span>
-                  <span className="tool-title">
-                    Make sense of the fine print{" "}
-                    <ArrowUpRight size={19} aria-hidden="true" />
-                  </span>
-                  <span className="tool-description">
-                    Get a plain-language version of a letter, notice, or form.
-                  </span>
-                  <span className="tool-footer">
-                    Private AI on your computer
-                    <ArrowRight size={16} aria-hidden="true" />
-                  </span>
-                </button>
-              </div>
-              <div className="home-bottom">
-                <section className="why-card">
-                  <div className="section-heading">
-                    <h2>A space built around you</h2>
-                    <span className="small-bridge">⌒</span>
-                  </div>
-                  <div className="promise-row">
-                    <span>
-                      <Check size={16} aria-hidden="true" />
-                    </span>
-                    <div>
-                      <h3>Your privacy comes first</h3>
-                      <p>No sign-ups, no trackers, no sharing your story.</p>
-                    </div>
-                  </div>
-                  <div className="promise-row">
-                    <span>
-                      <Check size={16} aria-hidden="true" />
-                    </span>
-                    <div>
-                      <h3>Clear answers, honest limits</h3>
-                      <p>
-                        We tell you what we know and what needs another look.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="promise-row">
-                    <span>
-                      <Check size={16} aria-hidden="true" />
-                    </span>
-                    <div>
-                      <h3>Progress, at your pace</h3>
-                      <p>
-                        Start small. Come back to the rest when you’re ready.
-                      </p>
-                    </div>
-                  </div>
-                </section>
-                <section className="gentle-card">
-                  <CircleHelp size={23} aria-hidden="true" />
-                  <h2>Not sure where to start?</h2>
-                  <p>
-                    Take a look around with a sample household. See how Abridge
-                    can help before sharing anything.
-                  </p>
-                  <Button
-                    variant="secondary"
-                    busy={sampleBusy}
-                    onClick={() => {
-                      void explore();
-                    }}
-                  >
-                    Explore a sample
-                    <ArrowRight size={16} aria-hidden="true" />
-                  </Button>
-                  <span>Made-up details. Real calculations.</span>
-                </section>
-              </div>
-            </>
-          )}
+          {page === "home" &&
+            (isWelcome ? (
+              <WelcomePage
+                busy={sampleBusy}
+                error={error}
+                onStart={startCheck}
+                onSample={() => {
+                  void explore();
+                }}
+              />
+            ) : (
+              <OverviewPage
+                likely={likely}
+                screening={screening}
+                budget={budgetResult}
+                onSupport={() =>
+                  screening ? navigate("benefits") : startCheck()
+                }
+                onBudget={() => navigate("budget")}
+                onDocument={() => navigate("documents")}
+              />
+            ))}
           {page === "check" && (
             <CheckPage initial={household} onComplete={complete} />
           )}
@@ -505,7 +321,7 @@ const Session = ({ reset }: { reset: () => void }) => {
             <BenefitsPage
               result={screening}
               household={household}
-              onCheck={() => navigate("check")}
+              onCheck={startCheck}
             />
           )}
           {page === "budget" && (

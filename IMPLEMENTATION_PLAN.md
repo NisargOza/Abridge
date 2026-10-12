@@ -20,7 +20,7 @@ Native PDF parsing/OCR and mobile inference are outside the implemented desktop 
 
 ## Progress
 
-Backend: 64 tests pass; 1 optional real Gemma smoke evaluation passes. Frontend: 3 unit tests and 4 real-FastAPI Playwright flows pass. Strict mypy / TypeScript, Ruff / ESLint, formatting, and production build pass. Axe finds no WCAG 2.2 AA violations on covered page states. Keyboard skip/focus behavior, mobile 320/390 px reflow, and 200% zoom were checked. Production shell loads offline; cache inventory contains only shell/assets, never API or financial data. Actual local document rewriting and public-source explanations with mapped citations have been verified. Setup script was run successfully; shell scripts pass syntax checks.
+Backend: 67 tests pass (including startup regressions); 1 optional real Gemma smoke evaluation passes. Frontend: 7 unit tests and 6 real-FastAPI Playwright flows pass. Strict mypy / TypeScript, Ruff / ESLint, formatting, and production build pass. Axe finds no WCAG 2.2 AA violations on covered page states. Keyboard skip/focus behavior, mobile 320/390 px reflow, and 200% zoom were checked. Production shell loads offline; cache inventory contains only shell/assets, never API or financial data. Actual local document rewriting and public-source explanations with mapped citations have been verified. Setup script was run successfully; shell scripts pass syntax checks.
 
 Fixed discovered failures: React development preamble CSP, text contrast, mobile clear-button label, initial keyboard focus, duplicate source chunks, numeric substring validation, non-amortizing decimal overflow, unresolved source domains, and outdated government links. The crawler fetched HHS/Lifeline, safely skipped restricted pages, and continued. CI now reproduces lint, typechecks, unit, build, and browser checks on Linux. See docs/VERIFIED_ASSUMPTIONS.md for capability boundaries and primary sources.
 
@@ -31,3 +31,13 @@ Three implementation milestones and a final validation record are committed on `
 ## Regular-terminal startup fix
 
 The first launch check used Codex's bundled pnpm PATH; the user's regular terminal exposed a missing `pnpm` command. Setup and dev now share a portable pnpm/Corepack resolver, preflight tool availability before spawning services, and print the ready URL only after the API, web, and requested AI are healthy. Verified with a PATH excluding Codex's tools: pinned pnpm 11.25.0, serving UI, healthy API, and ready AI. Three regression tests cover installed-pnpm preference, Corepack fallback in the correct project directory, and failure before any service starts. No shell-profile changes or new dependencies were needed.
+
+## Calmer welcome and working sample
+
+- [x] Replace the crowded first overview with a quiet welcome: one primary support check and one secondary sample action.
+- [x] Keep every feature in a compact Tools menu; show the workspace navigation after choosing a task. Simplify the returning overview into a next step and a quiet tool list.
+- [x] Make the sample open labeled benefit results directly, with the computed budget and debt plans available in the workspace.
+- [x] Clear fictional profile/budget data when starting personal mode, keep failed samples retryable, and discard delayed sample responses after the user chooses another flow.
+- [x] Verify frontend unit, type, lint, build, mobile/desktop axe, keyboard navigation, sample success/failure/retry, clean personal transitions, and all browser flows.
+
+Browser tests now use a separate real API on 8001 so the live user app stays available on 8000 during verification.

@@ -17,13 +17,13 @@ export default defineConfig({
     },
     {
       command:
-        "uv run --project ../engine uvicorn abridge.api.main:app --host 127.0.0.1 --port 8000 --no-access-log",
-      url: "http://127.0.0.1:8000/api/health",
+        "uv run --project ../engine uvicorn abridge.api.main:app --host 127.0.0.1 --port 8001 --no-access-log",
+      url: "http://127.0.0.1:8001/api/health",
       reuseExistingServer: false,
       env: { LLM_BASE_URL: "http://127.0.0.1:8091" },
     },
     {
-      command: "pnpm dev",
+      command: "../scripts/pnpm.sh dev",
       url: "http://127.0.0.1:5173",
       reuseExistingServer: !process.env.CI,
     },

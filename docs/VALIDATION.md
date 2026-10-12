@@ -4,15 +4,15 @@ Verified locally on macOS Apple Silicon, Node 24.16, Python 3.12.13, and llama.c
 
 | Check | Result |
 | --- | --- |
-| pytest unit/integration | 64 passed; real LLM test deselected |
+| pytest unit/integration | 67 passed in GitHub CI; real LLM test deselected |
 | optional real Gemma evaluation | 1 passed |
 | PolicyEngine regional HHS audit | 12 goldens match |
 | Ruff lint and format | pass |
 | strict mypy | pass |
-| Vitest | 3 passed |
+| Vitest | 7 passed |
 | ESLint and strict TypeScript | pass |
 | Vite production build | pass |
-| Playwright against real FastAPI + synthetic local LLM boundary | 4 passed |
+| Playwright against real FastAPI + synthetic local LLM boundary | 6 passed |
 | axe WCAG 2.2 AA on browser-covered pages/states | no violations |
 | desktop and mobile visual inspection | checked |
 | mobile 320 px / 390 px reflow | no horizontal overflow |
@@ -33,3 +33,5 @@ Tests include geographic poverty values, school/Lifeline threshold boundaries, m
 Browser tests cover the overview, two-step support check, unknown/completed/filter results, budget empty/payoff/shortfall states, document empty/rewrite/original/cleared states, privacy, session clearing, and engine failure. Network inspection sees only loopback requests; localStorage and sessionStorage remain empty.
 
 Automated scans and targeted keyboard/label/reflow inspection do not establish exhaustive WCAG conformance. AI anchor validation is a guardrail, not a proof of semantic equivalence. Phone inference and native PDF/OCR were not claimed or tested.
+
+The reorganized welcome screen was visually inspected at desktop/mobile widths and passed axe scans and 320 px reflow. Sample regression checks prove immediate navigation to real calculated results, a working sample money plan, retryable failure, no partial sample state, removal of fictional financial data on personal-mode entry, and ignoring delayed sample results when the user chooses another task. All features remain reachable through the welcome Tools menu and workspace navigation.
