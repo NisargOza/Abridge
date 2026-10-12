@@ -27,3 +27,7 @@ Fixed discovered failures: React development preamble CSP, text contrast, mobile
 ## Delivery
 
 Three implementation milestones and a final validation record are committed on `feat/abridge-local-first`, pushed to the existing configured remote without changing main or force-pushing. Draft PR: https://github.com/NisargOza/Abridge/pull/1. GitHub push and pull-request CI both passed their Linux engine and browser jobs. The one-command `./scripts/dev.sh --ai` launcher was verified with a ready local AI, healthy API, and serving frontend. The working tree contains no tracked models, databases, secrets, request logs, or personal financial data.
+
+## Regular-terminal startup fix
+
+The first launch check used Codex's bundled pnpm PATH; the user's regular terminal exposed a missing `pnpm` command. Setup and dev now share a portable pnpm/Corepack resolver, preflight tool availability before spawning services, and print the ready URL only after the API, web, and requested AI are healthy. Verified with a PATH excluding Codex's tools: pinned pnpm 11.25.0, serving UI, healthy API, and ready AI. Three regression tests cover installed-pnpm preference, Corepack fallback in the correct project directory, and failure before any service starts. No shell-profile changes or new dependencies were needed.

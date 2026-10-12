@@ -6,7 +6,7 @@ Abridge is a complete local-first U.S. benefits prescreener, budget and debt pla
 
 ## Start
 
-Requirements: Node.js 22.12+ (tested on 24.16), pnpm 11.25, uv, and Python 3.12 (uv installs it as needed). For AI, install **llama.cpp 0.6.0** (`brew install llama.cpp` on supported macOS; see [upstream builds](https://github.com/ggml-org/llama.cpp/releases/tag/v0.6.0) elsewhere). Model smoke-tested on Apple Silicon with 16 GB RAM.
+Requirements: Node.js 22.12+ (tested on 24.16), pnpm 11.25 or an installed Corepack, uv, and Python 3.12 (uv installs it as needed). For AI, install **llama.cpp 0.6.0** (`brew install llama.cpp` on supported macOS; see [upstream builds](https://github.com/ggml-org/llama.cpp/releases/tag/v0.6.0) elsewhere). Model smoke-tested on Apple Silicon with 16 GB RAM.
 
 ```sh
 git clone https://github.com/NisargOza/Abridge.git
@@ -17,6 +17,8 @@ git checkout feat/abridge-local-first
 ```
 
 Open **http://127.0.0.1:5173**. “Explore a sample” uses clearly labeled fictional details and real engine calculations. You can use benefits and budgets without AI.
+
+The setup and dev launchers work in regular terminals too: they use an installed `pnpm`, or fall back to `corepack pnpm` with the version pinned in `web/package.json`. They check the tools before starting any service. For standalone frontend commands below, use `corepack pnpm` instead of `pnpm` if needed, or run `./scripts/pnpm.sh <command>` from the repository root. No shell-profile changes are required.
 
 For private AI, stop the dev session, then:
 
