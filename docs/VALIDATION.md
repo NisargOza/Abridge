@@ -25,6 +25,8 @@ Verified locally on macOS Apple Silicon, Node 24.16, Python 3.12.13, and llama.c
 | public source updater | HHS / USAC updated; restricted sources skipped safely |
 | reproducible setup script | pass |
 | shell script syntax | pass |
+| one-command desktop launcher | healthy engine, serving web, ready local AI |
+| GitHub Linux CI (push and PR) | engine and browser jobs pass |
 
 Tests include geographic poverty values, school/Lifeline threshold boundaries, missing facts, expired rules, unsupported territories, exact zero-interest payoff, known monthly interest, minimum-payment recycling, funding gaps, zero gross income, excessive requested extras, and the maximum supported non-amortizing balance. AI tests mock the HTTP boundary, enforce schemas and source IDs, reject unsupported numbers and changed months/currency/modality, and preserve safe fallback behavior. Crawler fixtures cover robots, rate limits, redirect escapes, allowlists, response-size limits, metadata, FTS queries, re-ingestion, and retired-source cleanup.
 
