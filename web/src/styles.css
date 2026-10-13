@@ -15,12 +15,22 @@
   --muted: #5e6b62;
   --line: #e2e6dd;
   --cream: #f4f2e8;
+  --shadow-soft: 0 12px 34px rgb(41 59 50 / 8%);
+  --shadow-lifted: 0 18px 45px rgb(33 58 45 / 13%);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 * {
   box-sizing: border-box;
 }
 body {
   margin: 0;
+  background:
+    radial-gradient(
+      circle at 78% 4%,
+      rgb(226 235 217 / 55%),
+      transparent 27rem
+    ),
+    #f8f9f5;
 }
 button,
 input,
@@ -98,6 +108,24 @@ svg {
 button {
   border: 0;
 }
+.page-stage {
+  animation: page-arrive 480ms var(--ease-out) both;
+}
+.page-stage > .page-heading {
+  animation: content-arrive 560ms 40ms var(--ease-out) both;
+}
+.page-home > .hero {
+  animation: content-arrive 620ms 100ms var(--ease-out) both;
+}
+.page-home > .workspace-tools {
+  animation: content-arrive 600ms 190ms var(--ease-out) both;
+}
+.page-welcome > .welcome-hero {
+  animation: content-arrive 620ms 70ms var(--ease-out) both;
+}
+.page-welcome > .welcome-steps {
+  animation: content-arrive 620ms 170ms var(--ease-out) both;
+}
 .sr-only {
   position: absolute;
   width: 1px;
@@ -127,7 +155,13 @@ button {
 .sidebar {
   width: 250px;
   flex-shrink: 0;
-  background: #f1f3ec;
+  background:
+    radial-gradient(
+      circle at 20% 2%,
+      rgb(255 255 255 / 82%),
+      transparent 15rem
+    ),
+    linear-gradient(180deg, #f1f3ec, #edf0e8);
   border-right: 1px solid var(--line);
   position: fixed;
   inset: 0 auto 0 0;
@@ -147,6 +181,18 @@ button {
   gap: 10px;
   background: none;
   padding: 0;
+}
+.brand img,
+.brand > span {
+  transition: transform 260ms var(--ease-out);
+}
+.brand:hover img,
+.brand:focus-visible img {
+  transform: rotate(-5deg) scale(1.06);
+}
+.brand:hover > span,
+.brand:focus-visible > span {
+  transform: translateX(2px);
 }
 .brand img {
   width: 35px;
@@ -184,6 +230,21 @@ button {
   border-radius: 8px;
   font-weight: 520;
   position: relative;
+  overflow: hidden;
+  transition:
+    color 220ms ease,
+    background 220ms ease,
+    transform 220ms var(--ease-out);
+}
+.nav-item::before {
+  content: "";
+  position: absolute;
+  inset: 8px auto 8px 0;
+  width: 3px;
+  border-radius: 0 4px 4px 0;
+  background: var(--green);
+  transform: scaleY(0);
+  transition: transform 260ms var(--ease-out);
 }
 .nav-item.active {
   color: var(--green);
@@ -192,6 +253,17 @@ button {
 }
 .nav-item:hover {
   background: #e7ece2;
+  transform: translateX(2px);
+}
+.nav-item.active::before {
+  transform: scaleY(1);
+}
+.nav-item svg {
+  transition: transform 240ms var(--ease-out);
+}
+.nav-item:hover svg,
+.nav-item:focus-visible svg {
+  transform: scale(1.08);
 }
 .nav-dot {
   margin-left: auto;
@@ -199,6 +271,7 @@ button {
   height: 5px;
   background: var(--green);
   border-radius: 50%;
+  animation: nav-dot-in 320ms var(--ease-out) both;
 }
 .sidebar-bottom {
   margin-top: auto;
@@ -209,6 +282,15 @@ button {
   border-radius: 11px;
   padding: 18px 16px;
   background: #ecf0e5;
+  transition:
+    border-color 240ms ease,
+    box-shadow 240ms ease,
+    transform 240ms var(--ease-out);
+}
+.privacy-mini:hover {
+  border-color: #cbd8c2;
+  box-shadow: 0 10px 24px rgb(41 59 50 / 7%);
+  transform: translateY(-2px);
 }
 .icon-box {
   width: 31px;
@@ -269,7 +351,12 @@ button {
   align-items: center;
   justify-content: space-between;
   padding: 0 43px;
-  background: #fcfcf9;
+  background: rgb(252 252 249 / 88%);
+  backdrop-filter: blur(14px);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  box-shadow: 0 1px 0 rgb(37 77 64 / 3%);
 }
 .breadcrumb {
   display: flex;
@@ -299,6 +386,8 @@ button {
   height: 6px;
   border-radius: 50%;
   background: #6a8961;
+  box-shadow: 0 0 0 0 rgb(106 137 97 / 45%);
+  animation: private-pulse 3.2s ease-out infinite;
 }
 .clear-button {
   background: none;
@@ -308,6 +397,13 @@ button {
   font-size: 10px;
   color: #5f6b60;
   min-height: 44px;
+  transition:
+    color 180ms ease,
+    transform 180ms var(--ease-out);
+}
+.clear-button:hover {
+  color: #8a4f32;
+  transform: translateY(-1px);
 }
 .main-content {
   max-width: 1340px;
@@ -351,6 +447,46 @@ button {
   padding: 32px 35px;
   display: flex;
   align-items: center;
+  isolation: isolate;
+  box-shadow: 0 18px 42px rgb(37 77 64 / 16%);
+  transition:
+    box-shadow 350ms ease,
+    transform 350ms var(--ease-out);
+}
+.hero::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 430px;
+  height: 430px;
+  right: -125px;
+  top: -220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(185 203 182 / 24%), transparent 68%);
+  animation: hero-glow 8s ease-in-out infinite alternate;
+}
+.hero::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background:
+    linear-gradient(
+      115deg,
+      transparent 38%,
+      rgb(255 255 255 / 5%) 49%,
+      transparent 60%
+    ),
+    radial-gradient(circle at 13% 118%, rgb(230 181 115 / 13%), transparent 36%);
+  background-size:
+    220% 100%,
+    auto;
+  animation: hero-sheen 9s ease-in-out infinite;
+  pointer-events: none;
+}
+.hero:hover {
+  box-shadow: 0 22px 52px rgb(37 77 64 / 21%);
+  transform: translateY(-2px);
 }
 .hero-copy {
   position: relative;
@@ -399,9 +535,44 @@ button {
   padding: 11px 17px;
   font-size: 12px;
   font-weight: 550;
+  position: relative;
+  overflow: hidden;
   transition:
-    background 0.15s,
-    border-color 0.15s;
+    background 0.2s,
+    border-color 0.2s,
+    box-shadow 0.2s,
+    transform 0.2s var(--ease-out);
+}
+.button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 25%,
+    rgb(255 255 255 / 30%),
+    transparent 72%
+  );
+  transform: translateX(-130%);
+  transition: transform 520ms var(--ease-out);
+  pointer-events: none;
+}
+.button:hover::after {
+  transform: translateX(130%);
+}
+.button:hover {
+  box-shadow: 0 8px 20px rgb(37 77 64 / 13%);
+  transform: translateY(-2px);
+}
+.button:active {
+  box-shadow: none;
+  transform: translateY(0) scale(0.98);
+}
+.button svg {
+  transition: transform 220ms var(--ease-out);
+}
+.button:hover svg:not(.spin) {
+  transform: translateX(3px);
 }
 .button.primary {
   color: white;
@@ -447,6 +618,52 @@ button {
   position: absolute;
   right: 20px;
   bottom: 15px;
+  overflow: visible;
+  filter: drop-shadow(0 14px 16px rgb(15 44 34 / 18%));
+}
+.bridge-art > * {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.bridge-sun {
+  animation:
+    sun-arrive 900ms 220ms var(--ease-out) both,
+    sun-float 5s 1.2s ease-in-out infinite;
+}
+.bridge-sparkles circle {
+  animation: sparkle 3.4s ease-in-out infinite;
+}
+.bridge-sparkles circle:nth-child(2) {
+  animation-delay: 900ms;
+}
+.bridge-sparkles circle:nth-child(3) {
+  animation-delay: 1.7s;
+}
+.bridge-span,
+.bridge-road {
+  stroke-dasharray: 520;
+  stroke-dashoffset: 520;
+  animation: bridge-draw 1s 180ms var(--ease-out) forwards;
+}
+.bridge-span-middle {
+  animation-delay: 300ms;
+}
+.bridge-span-inner {
+  animation-delay: 410ms;
+}
+.bridge-road {
+  animation-delay: 520ms;
+}
+.bridge-land {
+  animation: land-arrive 800ms 100ms var(--ease-out) both;
+}
+.bridge-water {
+  stroke-dasharray: 9 7;
+  animation: water-move 6s linear infinite;
+}
+.bridge-tree {
+  transform-origin: bottom center;
+  animation: tree-sway 5s ease-in-out infinite;
 }
 .section-heading {
   display: flex;
@@ -478,13 +695,34 @@ button {
   padding: 23px 21px 0;
   background: #fff;
   min-width: 0;
+  position: relative;
+  overflow: hidden;
   transition:
-    box-shadow 0.15s,
-    transform 0.15s;
+    border-color 260ms ease,
+    box-shadow 300ms ease,
+    transform 300ms var(--ease-out);
+}
+.tool-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg, #6f917f, #d2ae7e);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 320ms var(--ease-out);
 }
 .tool-card:hover {
-  box-shadow: 0 8px 20px #243a2c0c;
-  transform: translateY(-2px);
+  border-color: #d0d9ca;
+  box-shadow: var(--shadow-lifted);
+  transform: translateY(-6px);
+}
+.tool-card:hover::before,
+.tool-card:focus-visible::before {
+  transform: scaleX(1);
+}
+.tool-card:active {
+  transform: translateY(-2px) scale(0.99);
 }
 .tool-icon {
   width: 43px;
@@ -493,6 +731,25 @@ button {
   display: grid;
   place-items: center;
   margin-bottom: 19px;
+  transition:
+    box-shadow 260ms ease,
+    transform 300ms var(--ease-out);
+}
+.tool-card:hover .tool-icon,
+.tool-card:focus-visible .tool-icon {
+  box-shadow: 0 8px 18px rgb(41 59 50 / 10%);
+  transform: rotate(-4deg) scale(1.08);
+}
+.tool-card svg {
+  transition: transform 260ms var(--ease-out);
+}
+.tool-card:hover .tool-title > svg,
+.tool-card:focus-visible .tool-title > svg {
+  transform: translate(3px, -3px);
+}
+.tool-card:hover .tool-footer > svg,
+.tool-card:focus-visible .tool-footer > svg {
+  transform: translateX(4px);
 }
 .sage {
   background: #ebf0e3;
@@ -550,6 +807,10 @@ button {
   border: 1px solid var(--line);
   border-radius: 11px;
   padding: 24px 25px;
+  transition:
+    border-color 260ms ease,
+    box-shadow 300ms ease,
+    transform 300ms var(--ease-out);
 }
 .why-card .section-heading {
   margin: 0 0 22px;
@@ -574,6 +835,15 @@ button {
   display: grid;
   place-items: center;
   margin-top: 1px;
+  transition:
+    color 220ms ease,
+    background 220ms ease,
+    transform 260ms var(--ease-out);
+}
+.promise-row:hover > span {
+  color: white;
+  background: #5f8053;
+  transform: scale(1.1) rotate(-6deg);
 }
 .promise-row h3 {
   font-size: 11px;
@@ -588,6 +858,15 @@ button {
   border: 1px solid #e7e0d3;
   border-radius: 11px;
   padding: 27px;
+  transition:
+    border-color 260ms ease,
+    box-shadow 300ms ease,
+    transform 300ms var(--ease-out);
+}
+.why-card:hover,
+.gentle-card:hover {
+  box-shadow: var(--shadow-soft);
+  transform: translateY(-3px);
 }
 .gentle-card > svg {
   color: #765e41;
@@ -642,6 +921,9 @@ button {
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 28px;
+  transition:
+    border-color 240ms ease,
+    box-shadow 300ms ease;
 }
 .panel > h2 {
   margin-bottom: 9px;
@@ -676,6 +958,10 @@ button {
   color: #47613d;
   border-radius: 50%;
   font-weight: 600;
+  transition:
+    background 260ms ease,
+    transform 300ms var(--ease-out);
+  animation: step-pop 360ms var(--ease-out) both;
 }
 .step-track {
   height: 4px;
@@ -689,6 +975,7 @@ button {
   height: 4px;
   background: #709168;
   border-radius: 4px;
+  transition: width 500ms var(--ease-out);
 }
 .form-stack {
   margin-top: 26px;
@@ -703,6 +990,10 @@ button {
   font-weight: 580;
   margin-bottom: 8px;
   line-height: 1.5;
+  transition: color 180ms ease;
+}
+.field:focus-within > label {
+  color: #315d4d;
 }
 .field-hint {
   font-size: 11px;
@@ -721,6 +1012,24 @@ button {
   color: #293b32;
   min-height: 45px;
   font-size: 13px;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms var(--ease-out);
+}
+.field input:hover,
+.field select:hover,
+.field textarea:hover {
+  border-color: #b9c8b2;
+}
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  background: white;
+  border-color: #6f917f;
+  box-shadow: 0 0 0 4px rgb(111 145 127 / 14%);
+  transform: translateY(-1px);
 }
 .field input::placeholder,
 .field textarea::placeholder {
@@ -746,6 +1055,15 @@ button {
   border-radius: 12px;
   padding: 29px;
   color: #4e6346;
+  transition:
+    border-color 240ms ease,
+    box-shadow 300ms ease,
+    transform 300ms var(--ease-out);
+}
+.context-card:hover {
+  border-color: #ccd9c2;
+  box-shadow: var(--shadow-soft);
+  transform: translateY(-2px);
 }
 .context-card > svg {
   margin-bottom: 17px;
@@ -789,6 +1107,7 @@ button {
   gap: 12px;
   margin-bottom: 22px;
   color: #4c6244;
+  animation: banner-arrive 420ms var(--ease-out) both;
 }
 .info-banner strong {
   font-size: 12px;
@@ -838,6 +1157,15 @@ button {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  transition:
+    border-color 260ms ease,
+    box-shadow 300ms ease,
+    transform 300ms var(--ease-out);
+}
+.program-card:hover {
+  border-color: #cfd9c8;
+  box-shadow: var(--shadow-soft);
+  transform: translateY(-3px);
 }
 .program-top {
   width: 100%;
@@ -862,6 +1190,7 @@ button {
   border-radius: 20px;
   padding: 6px 9px;
   line-height: 1.4;
+  animation: badge-pop 420ms 120ms var(--ease-out) both;
 }
 .likely_eligible {
   background: #e8f0df;
@@ -920,6 +1249,15 @@ button {
   min-height: 35px;
   display: list-item;
   padding-top: 9px;
+  transition: color 180ms ease;
+}
+.program-card summary:hover {
+  color: #315d4d;
+}
+.program-card details[open] > :not(summary),
+.strategy-card details[open] > :not(summary),
+.original[open] > :not(summary) {
+  animation: details-open 300ms var(--ease-out) both;
 }
 .next-step {
   font-size: 11px;
@@ -941,6 +1279,16 @@ button {
   color: #46683c;
   min-height: 30px;
   text-underline-offset: 3px;
+  transition: color 180ms ease;
+}
+.external-link svg {
+  transition: transform 220ms var(--ease-out);
+}
+.external-link:hover {
+  color: #2f5d3f;
+}
+.external-link:hover svg {
+  transform: translate(2px, -2px);
 }
 .source-line {
   width: 100%;
@@ -1078,6 +1426,22 @@ button {
   color: #e7efdf;
   padding: 26px;
   border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  box-shadow: 0 14px 32px rgb(37 77 64 / 14%);
+}
+.balance-card::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 220px;
+  height: 220px;
+  right: -85px;
+  top: -120px;
+  border-radius: 50%;
+  background: rgb(216 229 212 / 10%);
+  animation: balance-orb 7s ease-in-out infinite alternate;
 }
 .balance-card > p {
   font-size: 8px;
@@ -1132,6 +1496,15 @@ button {
   border: 1px solid #e0e5d8;
   border-radius: 10px;
   padding: 19px 16px;
+  transition:
+    border-color 240ms ease,
+    box-shadow 280ms ease,
+    transform 280ms var(--ease-out);
+}
+.strategy-card:hover {
+  border-color: #cad7c1;
+  box-shadow: 0 10px 25px rgb(41 59 50 / 8%);
+  transform: translateY(-2px);
 }
 .strategy-dot {
   height: 4px;
@@ -1337,6 +1710,13 @@ button {
   font-size: 11px;
   padding: 14px 0;
   border-bottom: 1px solid #e7ebdf;
+  transition:
+    background 180ms ease,
+    padding 180ms ease;
+}
+.runtime-status:hover {
+  background: #f7f9f4;
+  padding-inline: 8px;
 }
 .ready {
   color: #456b37;
@@ -1368,6 +1748,10 @@ button {
   border-radius: 8px;
   padding: 11px 15px;
   margin-bottom: 22px;
+  animation: banner-arrive 420ms var(--ease-out) both;
+}
+.sample-banner > svg {
+  animation: sparkle 2.8s ease-in-out infinite;
 }
 .sample-banner button {
   background: none;
@@ -1388,6 +1772,118 @@ button {
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+@keyframes page-arrive {
+  from {
+    transform: translateY(8px);
+  }
+}
+@keyframes content-arrive {
+  from {
+    transform: translateY(18px);
+  }
+}
+@keyframes nav-dot-in {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+}
+@keyframes private-pulse {
+  45% {
+    box-shadow: 0 0 0 0 rgb(106 137 97 / 35%);
+  }
+  75%,
+  100% {
+    box-shadow: 0 0 0 7px transparent;
+  }
+}
+@keyframes hero-glow {
+  to {
+    transform: translate(-28px, 22px) scale(1.08);
+  }
+}
+@keyframes hero-sheen {
+  0%,
+  34% {
+    background-position:
+      130% 0,
+      0 0;
+  }
+  72%,
+  100% {
+    background-position:
+      -75% 0,
+      0 0;
+  }
+}
+@keyframes sun-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.8);
+  }
+}
+@keyframes sun-float {
+  50% {
+    transform: translateY(-5px);
+  }
+}
+@keyframes sparkle {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+}
+@keyframes bridge-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes land-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+@keyframes water-move {
+  to {
+    stroke-dashoffset: -64;
+  }
+}
+@keyframes tree-sway {
+  50% {
+    transform: rotate(1.6deg);
+  }
+}
+@keyframes step-pop {
+  from {
+    transform: scale(0.75);
+  }
+}
+@keyframes banner-arrive {
+  from {
+    transform: translateY(-8px);
+  }
+}
+@keyframes badge-pop {
+  from {
+    transform: scale(0.82);
+  }
+}
+@keyframes details-open {
+  from {
+    transform: translateY(-6px);
+  }
+}
+@keyframes balance-orb {
+  to {
+    transform: translate(-28px, 35px) scale(1.16);
   }
 }
 @media (min-width: 1500px) {
@@ -1703,6 +2199,7 @@ button {
   .sidebar.is-open .nav-items {
     display: flex;
     margin-top: 14px;
+    animation: mobile-menu-in 260ms var(--ease-out) both;
   }
   .sidebar.is-open .sidebar-bottom {
     display: block;
@@ -1729,6 +2226,8 @@ button {
   .topbar {
     height: 52px;
     padding: 0 20px;
+    position: relative;
+    top: auto;
   }
   .breadcrumb {
     font-size: 10px;
@@ -1937,6 +2436,47 @@ button {
     transition: none !important;
     scroll-behavior: auto !important;
   }
+  .bridge-span,
+  .bridge-road {
+    stroke-dashoffset: 0;
+  }
+  .hero:hover,
+  .tool-card:hover,
+  .tool-card:active,
+  .why-card:hover,
+  .gentle-card:hover,
+  .privacy-mini:hover,
+  .program-card:hover,
+  .strategy-card:hover,
+  .context-card:hover,
+  .button:hover,
+  .button:active,
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus,
+  .clear-button:hover,
+  .nav-item:hover,
+  .welcome-illustration:hover,
+  .welcome-step-grid article:hover,
+  .workspace-tool-list > button:hover,
+  .welcome-navigation > a:hover,
+  .welcome-privacy:hover,
+  .welcome-tools summary:hover,
+  .welcome-tool-menu button:hover,
+  .welcome-step-grid article:hover .step-mark,
+  .workspace-tool-list > button:hover .tool-icon,
+  .workspace-tool-list > button:focus-visible .tool-icon,
+  .workspace-tool-list > button:hover > svg,
+  .workspace-tool-list > button:focus-visible > svg {
+    transform: none !important;
+  }
+}
+
+@keyframes mobile-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
 }
 
 /* A quieter entrance: choose a first step before the full workspace navigation. */
@@ -1956,6 +2496,9 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 25px;
+  position: relative;
+  z-index: 40;
+  animation: content-arrive 520ms var(--ease-out) both;
 }
 .welcome-navigation {
   display: flex;
@@ -1969,10 +2512,15 @@ button {
   display: inline-flex;
   align-items: center;
   text-decoration: none;
+  transition:
+    color 200ms ease,
+    transform 220ms var(--ease-out);
 }
 .welcome-navigation > a:hover {
   text-decoration: underline;
   text-underline-offset: 4px;
+  color: var(--green);
+  transform: translateY(-1px);
 }
 .welcome-privacy {
   display: inline-flex;
@@ -1982,6 +2530,13 @@ button {
   background: transparent;
   font-size: 12px;
   color: #52644a;
+  transition:
+    color 200ms ease,
+    transform 220ms var(--ease-out);
+}
+.welcome-privacy:hover {
+  color: var(--green);
+  transform: translateY(-1px);
 }
 .welcome-tools {
   position: relative;
@@ -1993,6 +2548,16 @@ button {
   min-height: 44px;
   cursor: pointer;
   list-style: none;
+  transition:
+    color 200ms ease,
+    transform 220ms var(--ease-out);
+}
+.welcome-tools summary:hover {
+  color: var(--green);
+  transform: translateY(-1px);
+}
+.welcome-tools summary > svg {
+  transition: transform 240ms var(--ease-out);
 }
 .welcome-tools summary::-webkit-details-marker {
   display: none;
@@ -2011,6 +2576,7 @@ button {
   padding: 7px;
   box-shadow: 0 10px 35px #254d4014;
   z-index: 35;
+  animation: details-open 260ms var(--ease-out) both;
 }
 .welcome-tool-menu button {
   display: flex;
@@ -2024,9 +2590,13 @@ button {
   border-radius: 6px;
   font-size: 12px;
   color: #3c5733;
+  transition:
+    background 180ms ease,
+    transform 220ms var(--ease-out);
 }
 .welcome-tool-menu button:hover {
   background: #eef3e8;
+  transform: translateX(2px);
 }
 .welcome-hero {
   display: grid;
@@ -2097,6 +2667,42 @@ button {
   background: #254d40;
   border-radius: 80px 16px 16px 16px;
   overflow: hidden;
+  isolation: isolate;
+  box-shadow: 0 20px 48px rgb(37 77 64 / 17%);
+  transition:
+    box-shadow 350ms ease,
+    transform 350ms var(--ease-out);
+}
+.welcome-illustration::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 430px;
+  height: 430px;
+  right: -145px;
+  top: -230px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(185 203 182 / 26%), transparent 68%);
+  animation: hero-glow 8s ease-in-out infinite alternate;
+}
+.welcome-illustration::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 38%,
+    rgb(255 255 255 / 6%) 49%,
+    transparent 60%
+  );
+  background-size: 220% 100%;
+  animation: hero-sheen 9s ease-in-out infinite;
+  pointer-events: none;
+}
+.welcome-illustration:hover {
+  box-shadow: 0 24px 58px rgb(37 77 64 / 22%);
+  transform: translateY(-3px);
 }
 .welcome-illustration .bridge-art {
   position: static;
@@ -2104,6 +2710,7 @@ button {
   max-width: 390px;
   right: 5%;
   bottom: 63px;
+  z-index: 1;
 }
 .welcome-steps {
   border-top: 1px solid #dfe5d7;
@@ -2130,6 +2737,12 @@ button {
 }
 .welcome-step-grid article {
   padding: 9px 0 3px;
+  transition:
+    background 250ms ease,
+    transform 280ms var(--ease-out);
+}
+.welcome-step-grid article:hover {
+  transform: translateY(-3px);
 }
 .step-mark {
   background: #e8efe0;
@@ -2140,6 +2753,13 @@ button {
   place-items: center;
   border-radius: 9px;
   margin-bottom: 16px;
+  transition:
+    box-shadow 240ms ease,
+    transform 280ms var(--ease-out);
+}
+.welcome-step-grid article:hover .step-mark {
+  box-shadow: 0 9px 20px rgb(41 59 50 / 11%);
+  transform: rotate(-4deg) scale(1.07);
 }
 .step-mark.peach {
   background: #fbede0;
@@ -2172,6 +2792,13 @@ button {
   border: 1px solid var(--line);
   border-radius: 11px;
   overflow: hidden;
+  transition:
+    border-color 260ms ease,
+    box-shadow 300ms ease;
+}
+.workspace-tool-list:hover {
+  border-color: #d0d9ca;
+  box-shadow: var(--shadow-soft);
 }
 .workspace-tool-list > button {
   display: flex;
@@ -2181,6 +2808,7 @@ button {
   text-align: left;
   padding: 20px 23px;
   background: transparent;
+  transition: background 220ms ease;
 }
 .workspace-tool-list > button + button {
   border-top: 1px solid var(--line);
@@ -2210,6 +2838,16 @@ button {
 }
 .workspace-tool-list > button > svg {
   color: #5a744d;
+  transition: transform 240ms var(--ease-out);
+}
+.workspace-tool-list > button:hover > svg,
+.workspace-tool-list > button:focus-visible > svg {
+  transform: translateX(4px);
+}
+.workspace-tool-list > button:hover .tool-icon,
+.workspace-tool-list > button:focus-visible .tool-icon {
+  box-shadow: 0 8px 18px rgb(41 59 50 / 10%);
+  transform: rotate(-4deg) scale(1.06);
 }
 @media (max-width: 1000px) {
   .welcome-layout .main-content {
