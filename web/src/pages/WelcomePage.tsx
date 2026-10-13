@@ -5,7 +5,6 @@ import {
   ChevronDown,
   HeartHandshake,
   LockKeyhole,
-  Sprout,
   Wallet,
 } from "lucide-react";
 import { Bridge } from "../components/Bridge";
@@ -118,12 +117,7 @@ export const WelcomePage = ({
         </p>
       </div>
       <div className="welcome-illustration">
-        <span className="illustration-caption">
-          <Sprout size={15} aria-hidden="true" />
-          SMALL STEPS CAN MAKE ROOM
-        </span>
         <Bridge />
-        <span className="illustration-foot">At your pace. On your terms.</span>
       </div>
     </section>
     <section

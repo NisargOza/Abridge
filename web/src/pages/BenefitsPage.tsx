@@ -1,11 +1,5 @@
 import { useState } from "react";
-import {
-  ArrowRight,
-  Check,
-  Info,
-  SlidersHorizontal,
-  Sparkles,
-} from "lucide-react";
+import { ArrowRight, Check, SlidersHorizontal, Sparkles } from "lucide-react";
 import {
   Button,
   EmptyState,
@@ -72,17 +66,6 @@ export const BenefitsPage = ({
         </EmptyState>
       ) : (
         <>
-          <div className="info-banner">
-            <Info size={20} aria-hidden="true" />
-            <div>
-              <strong>This is a prescreen, not an approval.</strong>
-              <p>
-                Only Lifeline and school meal income routes are calculated.
-                Other programs need an agency review. Limits use stored rules
-                for {result.rule_year}.
-              </p>
-            </div>
-          </div>
           <div className="results-bar">
             <p>
               <strong>

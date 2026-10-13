@@ -41,3 +41,10 @@ The first launch check used Codex's bundled pnpm PATH; the user's regular termin
 - [x] Verify frontend unit, type, lint, build, mobile/desktop axe, keyboard navigation, sample success/failure/retry, clean personal transitions, and all browser flows.
 
 Browser tests now use a separate real API on 8001 so the live user app stays available on 8000 during verification.
+
+## Concise interface copy
+
+- [x] Remove both captions from the welcome illustration and center the bridge.
+- [x] Remove the introductory benefits banner and the two extra support-check sidebar explanations requested by the user.
+- [x] Preserve program statuses, per-program sources/scope, and the single footer estimate note.
+- [x] Verify seven frontend unit tests, six real-API browser flows with axe scans, lint/type checks, production build, and desktop/mobile layout.

@@ -2088,6 +2088,9 @@ button {
   margin-top: 3px;
 }
 .welcome-illustration {
+  display: grid;
+  place-items: center;
+  padding: 22px;
   position: relative;
   align-self: stretch;
   min-height: 340px;
@@ -2096,29 +2099,11 @@ button {
   overflow: hidden;
 }
 .welcome-illustration .bridge-art {
+  position: static;
   width: 91%;
   max-width: 390px;
   right: 5%;
   bottom: 63px;
-}
-.illustration-caption {
-  display: flex;
-  gap: 7px;
-  align-items: center;
-  justify-content: center;
-  color: #d2dfca;
-  font-size: 8px;
-  letter-spacing: 1.3px;
-  margin-top: 36px;
-}
-.illustration-foot {
-  position: absolute;
-  bottom: 28px;
-  left: 0;
-  right: 0;
-  text-align: center;
-  font-size: 11px;
-  color: #d2dfca;
 }
 .welcome-steps {
   border-top: 1px solid #dfe5d7;
@@ -2286,21 +2271,6 @@ button {
     right: 25px;
     bottom: 13px;
   }
-  .illustration-caption {
-    justify-content: flex-start;
-    margin: 35px 0 0 30px;
-    font-size: 8px;
-    max-width: 180px;
-    line-height: 1.7;
-  }
-  .illustration-foot {
-    text-align: left;
-    bottom: 38px;
-    left: 30px;
-    max-width: 130px;
-    font-size: 12px;
-    line-height: 1.7;
-  }
   .welcome-step-grid {
     gap: 25px;
   }
@@ -2372,18 +2342,6 @@ button {
     right: 12px;
     bottom: 10px;
   }
-  .illustration-caption {
-    margin-left: 25px;
-    margin-top: 28px;
-    max-width: 145px;
-    font-size: 7px;
-  }
-  .illustration-foot {
-    left: 25px;
-    bottom: 34px;
-    max-width: 100px;
-    font-size: 11px;
-  }
   .welcome-step-grid {
     grid-template-columns: 1fr;
     gap: 22px;
@@ -2429,13 +2387,5 @@ button {
   .welcome-illustration .bridge-art {
     width: 165px;
     right: 9px;
-  }
-  .illustration-caption {
-    max-width: 116px;
-    margin-left: 20px;
-  }
-  .illustration-foot {
-    left: 20px;
-    max-width: 90px;
   }
 }
