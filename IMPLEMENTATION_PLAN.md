@@ -65,3 +65,12 @@ The local API and AI remain available while browser tests use a separate API ins
 - [x] Verify seven frontend tests, six browser flows with axe scans, lint/type checks, production build, and the real local AI document-upload demo.
 
 The updated localhost session serves the new interface on 127.0.0.1:5173, with the API on 8000 and local AI on 8080. All services remain loopback-only. The real document response preserved the deadline and amount and extracted the source action. README relative links and setup script syntax were checked.
+
+## Plain-language document correction
+
+- [x] Replace the copy-heavy prompt with everyday-word and sentence-rewriting instructions while retaining exact number/date/condition guards and source-quoted actions.
+- [x] Add a regression demonstrating that a simpler notice passes the existing validation and keeps its facts and action.
+- [x] Verify the user's exact notice and a second formal notice through the real local model and browser.
+- [x] Restart localhost with AI ready, verify checks, and commit/push only application changes.
+
+The document reader uses common-word examples, recognizes unchanged formal text, and permits one local correction with precise validation feedback. Repaired outputs still pass the original protected-token checks and a receipt-deadline check. Failed corrections retain only the original. Seventy-five backend tests, both real-model smoke checks, strict lint/type checks, and the document browser flow pass. The exact reported notice was visibly simplified in a real browser with its date, amount, receipt condition, and quoted action retained; axe found no violations. Presentation notes were updated only in the local outputs folder.

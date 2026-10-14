@@ -10,7 +10,13 @@ from fastapi.responses import JSONResponse, Response
 
 from abridge.budget.planner import plan
 from abridge.eligibility.rules import screen
-from abridge.llm.client import LocalAIError, available, generate, numeric_tokens, validate_rewrite
+from abridge.llm.client import (
+    LocalAIError,
+    available,
+    generate,
+    numeric_tokens,
+    rewrite_document,
+)
 from abridge.memory.store import Hit, Memory
 from abridge.models import (
     BudgetInput,
@@ -22,7 +28,6 @@ from abridge.models import (
     ExplanationInput,
     ExplanationResult,
     Household,
-    Rewrite,
     Screening,
 )
 
@@ -108,8 +113,7 @@ def budget(data: BudgetInput) -> BudgetResult:
 @app.post("/api/document", response_model=DocumentResult)
 async def document(data: DocumentInput) -> DocumentResult:
     try:
-        rewrite = await generate("document", data.text, Rewrite)
-        validate_rewrite(data.text, rewrite)
+        rewrite = await rewrite_document(data.text)
         # Actions must be source excerpts. Drop AI-added or paraphrased action claims.
         rewrite = rewrite.model_copy(
             update={

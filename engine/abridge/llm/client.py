@@ -1,6 +1,7 @@
 import json
 import os
 import re
+from collections import Counter
 from pathlib import Path
 from typing import TypeVar
 from urllib.parse import urlsplit
@@ -100,5 +101,61 @@ def validate_rewrite(original: str, rewrite: Rewrite) -> None:
         raise LocalAIError(
             "The rewrite did not preserve all numbers and conditions. Keep using the original."
         )
+    receipt_deadline = (
+        r"\b(?:receiv(?:e[ds]?|ing)|arriv(?:e[ds]?|ing))\b"
+        r"[^.!?]{0,120}\b(?:by|before|until)\b"
+    )
+    if re.search(receipt_deadline, original, re.IGNORECASE) and not re.search(
+        receipt_deadline, rewrite.plain_language, re.IGNORECASE
+    ):
+        raise LocalAIError("The rewrite changed a receipt deadline. Keep using the original.")
     if re.search(r"https?://|www\.", rewrite.plain_language + json.dumps(rewrite.action_items)):
         raise LocalAIError("The rewrite included a link. Keep using the original.")
+
+
+def copies_formal_wording(original: str, rewritten: str) -> bool:
+    if " ".join(original.split()).casefold() != " ".join(rewritten.split()).casefold():
+        return False
+    return bool(
+        re.search(
+            r"\b(?:documentation|constitute|pursuant|hereby|substantiating)\b|associated with",
+            original,
+            re.IGNORECASE,
+        )
+    )
+
+
+async def rewrite_document(original: str) -> Rewrite:
+    rewrite = await generate("document", original, Rewrite)
+    problem: str | None = None
+    try:
+        validate_rewrite(original, rewrite)
+    except LocalAIError as error:
+        problem = str(error)
+    if problem is None and copies_formal_wording(original, rewrite.plain_language):
+        problem = "Formal wording was copied unchanged. Rewrite it using common words."
+    if problem is not None:
+        original_counts = Counter(anchors(original))
+        rewritten_counts = Counter(anchors(rewrite.plain_language))
+        differences = [
+            {
+                "token": token,
+                "original_count": original_counts[token],
+                "rewrite_count": rewritten_counts[token],
+            }
+            for token in sorted(original_counts.keys() | rewritten_counts.keys())
+            if original_counts[token] != rewritten_counts[token]
+        ]
+        payload = json.dumps(
+            {
+                "original_document": original,
+                "previous_rewrite": rewrite.model_dump(),
+                "validation_problem": problem,
+                "protected_token_differences": differences,
+            }
+        )
+        rewrite = await generate("document_repair", payload, Rewrite)
+        validate_rewrite(original, rewrite)
+        if copies_formal_wording(original, rewrite.plain_language):
+            raise LocalAIError("The AI did not simplify this wording. Keep using the original.")
+    return rewrite

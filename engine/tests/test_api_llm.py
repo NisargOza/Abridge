@@ -19,6 +19,22 @@ def response(value: Mapping[str, object]) -> dict[str, object]:
     return {"choices": [{"message": {"content": json.dumps(value)}}]}
 
 
+FORMAL_NOTICE = (
+    "Further consideration of your request requires documentation confirming household income.\n"
+    "You must provide this documentation before November 18, 2026.\n"
+    "The outstanding balance for your request is $275.\n"
+    "If the documentation is not received by the deadline, the request may be suspended.\n"
+    "Receipt of documentation does not constitute approval."
+)
+SIMPLE_NOTICE = (
+    "Your request needs documents showing your household income.\n"
+    "You must provide these documents before November 18, 2026.\n"
+    "The unpaid balance for your request is $275.\n"
+    "If the documents are not received by the deadline, the request may be paused.\n"
+    "Receiving the documents does not mean approval."
+)
+
+
 def test_real_api_screen_budget_and_input_privacy() -> None:
     result = client.post(
         "/api/screen", json={"state": "NY", "household_size": 3, "monthly_gross_income": 2400}
@@ -194,10 +210,10 @@ def test_explanations_map_only_real_source_ids(
 @pytest.mark.llm
 @pytest.mark.asyncio
 async def test_real_llm_smoke() -> None:
-    from abridge.llm.client import generate
+    from abridge.llm.client import rewrite_document
 
     original = "Your appointment is on October 31, 2026. Bring this letter and a photo ID."
-    output = await generate("document", original, Rewrite)
+    output = await rewrite_document(original)
     validate_rewrite(original, output)
 
 
@@ -284,3 +300,142 @@ def test_source_chunks_are_deduplicated_and_numeric_substrings_rejected(
 def test_contracted_negations_cannot_be_removed(original: str, changed: str) -> None:
     with pytest.raises(LocalAIError):
         validate_rewrite(original, Rewrite(title="Notice", plain_language=changed, action_items=[]))
+
+
+def test_plain_language_notice_keeps_facts_original_and_source_action() -> None:
+    action = "You must provide this documentation before November 18, 2026."
+    with respx.mock() as mock:
+        mock.post("http://127.0.0.1:8080/v1/chat/completions").respond(
+            200,
+            json=response(
+                {
+                    "title": "Your documents",
+                    "plain_language": SIMPLE_NOTICE,
+                    "action_items": [action],
+                }
+            ),
+        )
+        result = client.post("/api/document", json={"text": FORMAL_NOTICE})
+    assert result.status_code == 200
+    output = result.json()
+    assert output["mode"] == "local_ai"
+    assert output["original"] == FORMAL_NOTICE
+    assert output["rewrite"]["plain_language"] == SIMPLE_NOTICE
+    assert output["rewrite"]["action_items"] == [action]
+
+
+@pytest.mark.parametrize("event", ["received", "arrived"])
+def test_receipt_deadline_allows_simpler_arrival_wording(event: str) -> None:
+    simple = SIMPLE_NOTICE.replace("not received", f"not {event}")
+    validate_rewrite(FORMAL_NOTICE, Rewrite(title="Notice", plain_language=simple, action_items=[]))
+
+
+def test_sending_deadline_cannot_replace_receipt_deadline() -> None:
+    changed = SIMPLE_NOTICE.replace(
+        "If the documents are not received", "If you do not send the documents"
+    )
+    with pytest.raises(LocalAIError, match="receipt deadline"):
+        validate_rewrite(
+            FORMAL_NOTICE, Rewrite(title="Notice", plain_language=changed, action_items=[])
+        )
+
+
+@pytest.mark.llm
+@pytest.mark.asyncio
+async def test_real_llm_simplifies_formal_notice() -> None:
+    from abridge.llm.client import rewrite_document
+
+    output = await rewrite_document(FORMAL_NOTICE)
+    validate_rewrite(FORMAL_NOTICE, output)
+    assert " ".join(output.plain_language.split()) != " ".join(FORMAL_NOTICE.split())
+    assert "November 18, 2026" in output.plain_language
+    assert "$275" in output.plain_language
+
+
+def test_invalid_rewrite_gets_one_validated_local_correction() -> None:
+    unsafe = SIMPLE_NOTICE.replace("Your request needs", "Your request must have")
+    action = "You must provide this documentation before November 18, 2026."
+    with respx.mock() as mock:
+        route = mock.post("http://127.0.0.1:8080/v1/chat/completions").mock(
+            side_effect=[
+                httpx.Response(
+                    200,
+                    json=response(
+                        {"title": "Notice", "plain_language": unsafe, "action_items": [action]}
+                    ),
+                ),
+                httpx.Response(
+                    200,
+                    json=response(
+                        {
+                            "title": "Notice",
+                            "plain_language": SIMPLE_NOTICE,
+                            "action_items": [action],
+                        }
+                    ),
+                ),
+            ]
+        )
+        result = client.post("/api/document", json={"text": FORMAL_NOTICE})
+        assert result.json()["mode"] == "local_ai"
+        assert result.json()["rewrite"]["plain_language"] == SIMPLE_NOTICE
+        assert route.call_count == 2
+        correction = json.loads(
+            json.loads(route.calls[1].request.content)["messages"][1]["content"]
+        )
+        assert correction["original_document"] == FORMAL_NOTICE
+        assert correction["protected_token_differences"] == [
+            {"token": "must", "original_count": 1, "rewrite_count": 2}
+        ]
+
+
+def test_correction_is_bounded_and_still_fails_closed() -> None:
+    unsafe = SIMPLE_NOTICE.replace("$275", "$900")
+    with respx.mock() as mock:
+        route = mock.post("http://127.0.0.1:8080/v1/chat/completions").respond(
+            200, json=response({"title": "Notice", "plain_language": unsafe, "action_items": []})
+        )
+        result = client.post("/api/document", json={"text": FORMAL_NOTICE})
+        assert result.json()["mode"] == "original_only"
+        assert result.json()["original"] == FORMAL_NOTICE
+        assert result.json()["rewrite"] is None
+        assert route.call_count == 2
+
+
+def test_copying_formal_wording_triggers_a_simplification_attempt() -> None:
+    with respx.mock() as mock:
+        route = mock.post("http://127.0.0.1:8080/v1/chat/completions").mock(
+            side_effect=[
+                httpx.Response(
+                    200,
+                    json=response(
+                        {"title": "Notice", "plain_language": FORMAL_NOTICE, "action_items": []}
+                    ),
+                ),
+                httpx.Response(
+                    200,
+                    json=response(
+                        {"title": "Notice", "plain_language": SIMPLE_NOTICE, "action_items": []}
+                    ),
+                ),
+            ]
+        )
+        result = client.post("/api/document", json={"text": FORMAL_NOTICE})
+        assert result.json()["mode"] == "local_ai"
+        assert result.json()["rewrite"]["plain_language"] == SIMPLE_NOTICE
+        assert route.call_count == 2
+
+
+def test_unchanged_formal_text_is_not_presented_as_a_successful_rewrite() -> None:
+    with respx.mock() as mock:
+        route = mock.post("http://127.0.0.1:8080/v1/chat/completions").respond(
+            200,
+            json=response(
+                {"title": "New title", "plain_language": FORMAL_NOTICE, "action_items": []}
+            ),
+        )
+        result = client.post("/api/document", json={"text": FORMAL_NOTICE})
+        assert result.json()["mode"] == "original_only"
+        assert result.json()["rewrite"] is None
+        assert "did not simplify" in result.json()["message"]
+        assert route.call_count == 2

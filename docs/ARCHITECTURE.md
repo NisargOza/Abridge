@@ -26,7 +26,7 @@ flowchart LR
 
 `crawler/` is a separate executable with no session input. Only curated HTTPS domains are allowed. Credentials, query strings, fragments, unexpected ports, redirect escapes, unresolved/private DNS, robots failures, oversized pages, and too many redirects are rejected. Successful extraction stores plain text. Updates never rewrite eligibility code.
 
-`llm/client.py` is the only engine module that calls inference. It requires 127.0.0.1 HTTP, does not follow redirects or trust proxy variables, applies timeouts, sends short prompt templates, constrains JSON output, and validates Pydantic schemas. Document rewrites are checked for numbers, dates, money, negations, and condition/modal words; unsupported action claims are dropped. Source explanations require exact quotes and known source IDs; application code adds real URLs. Deterministic status and math fields are never supplied as editable LLM output.
+`llm/client.py` is the only engine module that calls inference. It requires 127.0.0.1 HTTP, does not follow redirects or trust proxy variables, applies timeouts, sends short prompt templates, constrains JSON output, and validates Pydantic schemas. Document rewrites are checked for numbers, dates, money, negations, condition/modal words, and receipt deadlines; unsupported action claims are dropped. A rejected rewrite or copied formal wording gets at most one local correction using validation feedback. The corrected output is validated again, and failed corrections show only the original. Source explanations require exact quotes and known source IDs; application code adds real URLs. Deterministic status and math fields are never supplied as editable LLM output.
 
 ## Failure behavior
 
