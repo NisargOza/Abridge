@@ -48,3 +48,11 @@ Browser tests now use a separate real API on 8001 so the live user app stays ava
 - [x] Remove the introductory benefits banner and the two extra support-check sidebar explanations requested by the user.
 - [x] Preserve program statuses, per-program sources/scope, and the single footer estimate note.
 - [x] Verify seven frontend unit tests, six real-API browser flows with axe scans, lint/type checks, production build, and desktop/mobile layout.
+
+## Follow-up integration validation
+
+- [x] Review the regular-terminal launcher fix, quieter welcome, working sample transitions, and concise interface copy against main.
+- [x] Re-run 67 backend tests, seven frontend unit tests, and six browser flows with WCAG axe scans.
+- [x] Pass Ruff, formatting, mypy, ESLint, TypeScript, production build, and Git whitespace checks.
+
+The local API and AI remain available while browser tests use a separate API instance on port 8001. The follow-up branch preserves the verified application changes for pull-request integration.
