@@ -56,3 +56,12 @@ Browser tests now use a separate real API on 8001 so the live user app stays ava
 - [x] Pass Ruff, formatting, mypy, ESLint, TypeScript, production build, and Git whitespace checks.
 
 The local API and AI remain available while browser tests use a separate API instance on port 8001. The follow-up branch preserves the verified application changes for pull-request integration.
+
+## Latest main restart and hackathon README
+
+- [x] Stop the prior local services and fast-forward main to 569b424, including the animated interface update.
+- [x] Run setup and restart the frontend, API, and local AI with ./scripts/dev.sh --ai.
+- [x] Replace the long README with a 41-line hackathon overview, prerequisites, current-main setup, tech stack, privacy, and scope.
+- [x] Verify seven frontend tests, six browser flows with axe scans, lint/type checks, production build, and the real local AI document-upload demo.
+
+The updated localhost session serves the new interface on 127.0.0.1:5173, with the API on 8000 and local AI on 8080. All services remain loopback-only. The real document response preserved the deadline and amount and extracted the source action. README relative links and setup script syntax were checked.
