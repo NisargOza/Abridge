@@ -93,6 +93,14 @@ const Session = ({ reset }: { reset: () => void }) => {
     previousPage.current = page;
     document.title = `Abridge · ${page === "home" ? "A little breathing room" : page === "check" ? "Check for support" : (navigation.find((n) => n.id === page)?.label ?? "Your privacy")}`;
   }, [page]);
+  useEffect(() => {
+    if (!mobileMenu) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileMenu(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [mobileMenu]);
   const navigate = (target: Page) => {
     sampleAttempt.current += 1;
     setSampleBusy(false);
@@ -209,13 +217,14 @@ const Session = ({ reset }: { reset: () => void }) => {
               className="menu-toggle"
               aria-label={mobileMenu ? "Close navigation" : "Open navigation"}
               aria-expanded={mobileMenu}
+              aria-controls="primary-navigation"
               onClick={() => setMobileMenu(!mobileMenu)}
             >
               {mobileMenu ? <X /> : <Menu />}
             </button>
           </div>
           <div className="sidebar-tagline">A little help. A way forward.</div>
-          <nav className="nav-items">
+          <nav className="nav-items" id="primary-navigation">
             {navigation.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
@@ -265,7 +274,7 @@ const Session = ({ reset }: { reset: () => void }) => {
             </span>
             <div className="topbar-right">
               <span className="private-badge">
-                <span className="status-dot" />
+                <span className="status-dot" aria-hidden="true" />
                 Private by design
               </span>
               <button
@@ -292,62 +301,67 @@ const Session = ({ reset }: { reset: () => void }) => {
               </button>
             </div>
           )}
-          {page === "home" &&
-            (isWelcome ? (
-              <WelcomePage
-                busy={sampleBusy}
-                error={error}
-                onStart={startCheck}
-                onSample={() => {
-                  void explore();
+          <div
+            className={`page-stage page-${page} ${isWelcome ? "page-welcome" : ""}`}
+            key={`${page}-${isWelcome ? "welcome" : "workspace"}`}
+          >
+            {page === "home" &&
+              (isWelcome ? (
+                <WelcomePage
+                  busy={sampleBusy}
+                  error={error}
+                  onStart={startCheck}
+                  onSample={() => {
+                    void explore();
+                  }}
+                />
+              ) : (
+                <OverviewPage
+                  likely={likely}
+                  screening={screening}
+                  budget={budgetResult}
+                  onSupport={() =>
+                    screening ? navigate("benefits") : startCheck()
+                  }
+                  onBudget={() => navigate("budget")}
+                  onDocument={() => navigate("documents")}
+                />
+              ))}
+            {page === "check" && (
+              <CheckPage initial={household} onComplete={complete} />
+            )}
+            {page === "benefits" && (
+              <BenefitsPage
+                result={screening}
+                household={household}
+                onCheck={startCheck}
+              />
+            )}
+            {page === "budget" && (
+              <BudgetPage
+                initial={budgetInput}
+                household={household}
+                result={budgetResult}
+                onResult={(b, r) => {
+                  setBudgetInput(b);
+                  setBudgetResult(r);
                 }}
               />
-            ) : (
-              <OverviewPage
-                likely={likely}
-                screening={screening}
-                budget={budgetResult}
-                onSupport={() =>
-                  screening ? navigate("benefits") : startCheck()
-                }
-                onBudget={() => navigate("budget")}
-                onDocument={() => navigate("documents")}
+            )}
+            {page === "documents" && <DocumentsPage />}
+            {page === "privacy" && (
+              <PrivacyPage
+                health={health}
+                reset={reset}
+                refresh={() => {
+                  void api
+                    .health()
+                    .then(setHealth)
+                    .catch(() => setHealth(null));
+                }}
               />
-            ))}
-          {page === "check" && (
-            <CheckPage initial={household} onComplete={complete} />
-          )}
-          {page === "benefits" && (
-            <BenefitsPage
-              result={screening}
-              household={household}
-              onCheck={startCheck}
-            />
-          )}
-          {page === "budget" && (
-            <BudgetPage
-              initial={budgetInput}
-              household={household}
-              result={budgetResult}
-              onResult={(b, r) => {
-                setBudgetInput(b);
-                setBudgetResult(r);
-              }}
-            />
-          )}
-          {page === "documents" && <DocumentsPage />}
-          {page === "privacy" && (
-            <PrivacyPage
-              health={health}
-              reset={reset}
-              refresh={() => {
-                void api
-                  .health()
-                  .then(setHealth)
-                  .catch(() => setHealth(null));
-              }}
-            />
-          )}
+            )}
+          </div>
           <footer className="main-footer">
             <span>
               <Sprout size={15} aria-hidden="true" />A little help. A way
