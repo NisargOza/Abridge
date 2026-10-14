@@ -6,7 +6,7 @@ Abridge is a complete local-first U.S. benefits prescreener, budget and debt pla
 
 ## Start
 
-Requirements: Node.js 22.12+ (tested on 24.16), pnpm 11.25, uv, and Python 3.12 (uv installs it as needed). For AI, install **llama.cpp 0.6.0** (`brew install llama.cpp` on supported macOS; see [upstream builds](https://github.com/ggml-org/llama.cpp/releases/tag/v0.6.0) elsewhere). Model smoke-tested on Apple Silicon with 16 GB RAM.
+Requirements: Node.js 22.12+ (tested on 24.16), pnpm 11.25 or an installed Corepack, uv, and Python 3.12 (uv installs it as needed). For AI, install **llama.cpp 0.6.0** (`brew install llama.cpp` on supported macOS; see [upstream builds](https://github.com/ggml-org/llama.cpp/releases/tag/v0.6.0) elsewhere). Model smoke-tested on Apple Silicon with 16 GB RAM.
 
 ```sh
 git clone https://github.com/NisargOza/Abridge.git
@@ -16,7 +16,9 @@ git checkout feat/abridge-local-first
 ./scripts/dev.sh
 ```
 
-Open **http://127.0.0.1:5173**. “Explore a sample” uses clearly labeled fictional details and real engine calculations. You can use benefits and budgets without AI.
+Open **http://127.0.0.1:5173**. A quiet welcome screen offers a support check or “Explore a sample.” The sample opens clearly labeled results and includes a calculated money plan. All tools remain available in the welcome menu and workspace navigation. “Use my information” clears the fictional profile and budget before starting a fresh check. You can use benefits and budgets without AI.
+
+The setup and dev launchers work in regular terminals too: they use an installed `pnpm`, or fall back to `corepack pnpm` with the version pinned in `web/package.json`. They check the tools before starting any service. For standalone frontend commands below, use `corepack pnpm` instead of `pnpm` if needed, or run `./scripts/pnpm.sh <command>` from the repository root. No shell-profile changes are required.
 
 For private AI, stop the dev session, then:
 
@@ -92,7 +94,7 @@ pnpm exec playwright install chromium
 pnpm test:e2e
 ```
 
-Browser tests launch a **real FastAPI engine** and a synthetic loopback LLM boundary. Stop any engine already using port 8000 first; the suite never kills another process. The web dev server may be reused at 5173. Tests exercise benefits, missing facts, money/debt math, document rewriting, clearing, network boundaries, mobile reflow, keyboard focus, and axe scans on covered states. Unit crawler tests use saved HTML and mocked HTTP, without live public requests. The real Gemma evaluation is separate.
+Browser tests launch a **real FastAPI engine** and a synthetic loopback LLM boundary. The suite uses a separate real engine at port 8001 and forwards its browser API calls to that instance, so your app can stay running at port 8000. The suite never kills another process. The web dev server may be reused at 5173. Tests exercise benefits, missing facts, money/debt math, document rewriting, clearing, network boundaries, mobile reflow, keyboard focus, and axe scans on covered states. Unit crawler tests use saved HTML and mocked HTTP, without live public requests. The real Gemma evaluation is separate.
 
 Project layout: `web/src/pages`, reusable primitives in `web/src/components/ui`, single browser API boundary at `web/src/lib/api.ts`, backend domain modules under `engine/abridge`, public data under gitignored `data/`, and local scripts under `scripts/`.
 

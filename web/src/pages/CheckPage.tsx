@@ -225,16 +225,6 @@ export const CheckPage = ({
             No account. No names, addresses, or Social Security numbers. Your
             entries stay in memory for this session.
           </p>
-          <hr />
-          <h3>A check, not a decision</h3>
-          <p>
-            We test a few income routes. Each agency checks the full rules and
-            makes the final decision.
-          </p>
-          <h3>Missing details are okay</h3>
-          <p>
-            “More information needed” means there’s still a path to explore.
-          </p>
         </aside>
       </div>
     </>
