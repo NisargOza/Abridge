@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { api, clearPendingRequests } from "./lib/api";
+import { emptyPaperwork } from "./lib/paperwork";
 import type {
   BudgetInput,
   BudgetResult,
@@ -35,7 +36,7 @@ const navigation = [
   { id: "home", label: "Overview", icon: LayoutDashboard },
   { id: "benefits", label: "Find support", icon: HeartHandshake },
   { id: "budget", label: "My money plan", icon: Wallet },
-  { id: "documents", label: "Understand a document", icon: FileText },
+  { id: "documents", label: "Paperwork & next steps", icon: FileText },
 ] as const;
 
 export const App = () => {
@@ -65,6 +66,7 @@ const Session = ({ reset }: { reset: () => void }) => {
   const [screening, setScreening] = useState<Screening | null>(null);
   const [budgetInput, setBudgetInput] = useState<BudgetInput | null>(null);
   const [budgetResult, setBudgetResult] = useState<BudgetResult | null>(null);
+  const [paperwork, setPaperwork] = useState(emptyPaperwork);
   const [health, setHealth] = useState<Health | null>(null);
   const [sample, setSample] = useState(false);
   const [sampleBusy, setSampleBusy] = useState(false);
@@ -191,7 +193,12 @@ const Session = ({ reset }: { reset: () => void }) => {
   const likely =
     screening?.programs.filter((p) => p.status === "likely_eligible").length ??
     0;
-  const isWelcome = page === "home" && !household && !budgetInput;
+  const isWelcome =
+    page === "home" &&
+    !household &&
+    !budgetInput &&
+    !paperwork.text &&
+    !paperwork.tasks.length;
   return (
     <div className={`app-layout ${isWelcome ? "welcome-layout" : ""}`}>
       <a className="skip-link" href="#main">
@@ -320,6 +327,9 @@ const Session = ({ reset }: { reset: () => void }) => {
                   likely={likely}
                   screening={screening}
                   budget={budgetResult}
+                  openTasks={
+                    paperwork.tasks.filter((task) => !task.completed).length
+                  }
                   onSupport={() =>
                     screening ? navigate("benefits") : startCheck()
                   }
@@ -348,7 +358,9 @@ const Session = ({ reset }: { reset: () => void }) => {
                 }}
               />
             )}
-            {page === "documents" && <DocumentsPage />}
+            {page === "documents" && (
+              <DocumentsPage state={paperwork} setState={setPaperwork} />
+            )}
             {page === "privacy" && (
               <PrivacyPage
                 health={health}

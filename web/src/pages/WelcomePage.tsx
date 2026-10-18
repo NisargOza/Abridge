@@ -61,7 +61,7 @@ export const WelcomeHeader = ({
             </button>
             <button onClick={() => choose("documents")}>
               <BookOpenText size={18} aria-hidden="true" />
-              Understand a document
+              Paperwork & next steps
             </button>
           </div>
         </details>
@@ -157,10 +157,10 @@ export const WelcomePage = ({
           <span className="step-mark lavender">
             <BookOpenText size={21} aria-hidden="true" />
           </span>
-          <h3>Make sense of a document</h3>
+          <h3>Turn paperwork into progress</h3>
           <p>
-            Read a letter or notice in plain words, with private AI running on
-            your computer.
+            Get next steps from a notice, track them, and prepare questions with
+            private AI.
           </p>
         </article>
       </div>

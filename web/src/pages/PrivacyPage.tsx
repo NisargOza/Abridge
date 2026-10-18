@@ -25,7 +25,9 @@ export const PrivacyPage = ({
         <h2>What stays on your device</h2>
         <ul className="privacy-list">
           <li>Your income, household details, budget, and debts</li>
-          <li>Your document text, AI prompts, and answers</li>
+          <li>
+            Your document text, checklist, conversation drafts, and AI answers
+          </li>
           <li>Every benefits check and money calculation</li>
         </ul>
         <p>
@@ -37,6 +39,11 @@ export const PrivacyPage = ({
           Entries live in memory for this session. A refresh clears them.
           Abridge stores only public program knowledge and the app’s offline
           shell by default.
+        </p>
+        <p>
+          Plans and calendar files are saved only when you choose to download
+          them. Those files remain after clearing the session. Calendar files
+          have a generic title; your calendar may sync them.
         </p>
         <Button variant="secondary" onClick={reset}>
           <Trash2 size={16} aria-hidden="true" />
@@ -63,8 +70,8 @@ export const PrivacyPage = ({
           Check connection
         </Button>
         <p>
-          AI is optional for benefits and budgeting. Document rewriting needs
-          the local AI runtime.
+          AI is optional for benefits and budgeting. Notice analysis and
+          conversation preparation need the local AI runtime.
         </p>
         <h3>Start from the repository folder</h3>
         <pre>

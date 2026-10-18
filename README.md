@@ -8,9 +8,9 @@ Abridge helps U.S. households find financial support, plan their money, and unde
 
 - **Find support:** Lifeline and school-meal income checks with official sources and next steps.
 - **Make a money plan:** Monthly budgets and avalanche/snowball debt comparisons.
-- **Understand paperwork:** Local AI assistance for pasted text and `.txt` files. For PDFs, paste the document text.
+- **Follow through on paperwork:** Local AI finds requested actions in notices, builds a reviewed checklist, and prepares questions around barriers like missing pay stubs or work hours. Save a plan or a generic calendar reminder. Plain-language reading is included; use pasted text or `.txt` files.
 
-Financial entries and document text stay in local session memory. No accounts, trackers, paid API keys, or cloud AI. Refresh or **Clear session** removes the current entries.
+Financial entries, documents, and checklists stay in session memory. No accounts, trackers, paid API keys, or cloud AI. Refresh or **Clear session** removes current entries; files you explicitly download remain yours to manage.
 
 ## Run locally
 
@@ -26,6 +26,8 @@ cd Abridge
 
 Open **[127.0.0.1:5173](http://127.0.0.1:5173/)** and choose **Explore a sample** to try fictional household data. Leave the terminal open; **Ctrl+C** stops the session.
 
+For the AI workflow: **Tools → Paperwork & next steps → Try a fictional notice**. Find steps, review the original, add them to your plan, then open **Prepare a conversation** on a task.
+
 For benefits and budgeting without AI, skip the model download and run `./scripts/dev.sh`.
 
 ## Tech stack
@@ -34,8 +36,8 @@ For benefits and budgeting without AI, skip the model download and run `./script
 
 ## Scope
 
-Lifeline and school-meal income routes use stored 2026 rules. WIC, SNAP, and Medicaid are information only. Local AI requires a desktop setup.
+Lifeline and school-meal income routes use stored 2026 rules. WIC, SNAP, and Medicaid are information only. Local AI requires a desktop setup and currently supports English text; paste text from PDFs. AI can miss tasks or meaning, so review the full notice. Reminders require importing the calendar file. No applications or messages are sent automatically.
 
 This is an estimate, not legal, tax, or financial advice. The agency makes the final decision.
 
-**AGPL-3.0** · [Architecture](docs/ARCHITECTURE.md) · [Validation](docs/VALIDATION.md) · [Verified rules and runtime](docs/VERIFIED_ASSUMPTIONS.md) · [Third-party notices](docs/THIRD_PARTY_NOTICES.md)
+**AGPL-3.0** · [Research, implementation, and limits](IMPLEMENTATION_PLAN.md)

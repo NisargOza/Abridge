@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse, Response
 
 from abridge.budget.planner import plan
 from abridge.eligibility.rules import screen
+from abridge.llm.actions import extract_actions, prepare_conversation
 from abridge.llm.client import (
     LocalAIError,
     available,
@@ -19,8 +20,11 @@ from abridge.llm.client import (
 )
 from abridge.memory.store import Hit, Memory
 from abridge.models import (
+    ActionResult,
     BudgetInput,
     BudgetResult,
+    ConversationInput,
+    ConversationResult,
     DocumentInput,
     DocumentResult,
     ExplainedSource,
@@ -140,6 +144,31 @@ async def document(data: DocumentInput) -> DocumentResult:
             original=data.text,
             message=str(exc) + " No document was stored.",
         )
+
+
+@app.post("/api/actions", response_model=ActionResult)
+async def actions(data: DocumentInput) -> ActionResult:
+    try:
+        tasks = await extract_actions(data.text)
+        return ActionResult(
+            mode="local_ai",
+            tasks=tasks,
+            message=(
+                "AI suggestions, with original wording. Check that every request is covered."
+                if tasks
+                else "No clear action was identified. Read the full notice or ask its sender."
+            ),
+        )
+    except LocalAIError as exc:
+        return ActionResult(mode="unavailable", tasks=[], message=str(exc))
+
+
+@app.post("/api/conversation", response_model=ConversationResult)
+async def conversation(data: ConversationInput) -> ConversationResult:
+    try:
+        return ConversationResult(draft=await prepare_conversation(data))
+    except LocalAIError as exc:
+        raise HTTPException(503, str(exc)) from exc
 
 
 @app.post("/api/explain", response_model=ExplanationResult)
