@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 
 from abridge.api.main import app
 from abridge.llm.actions import evidence_units, explicit_date, extract_actions, prepare_conversation
+from abridge.llm.client import LocalAIError
 from abridge.models import ConversationInput
 
 client = TestClient(app, base_url="http://127.0.0.1")
@@ -163,6 +164,23 @@ def test_cancelled_appointment_is_not_a_task() -> None:
     assert output["mode"] == "unavailable" and output["tasks"] == []
 
 
+def test_explicit_appointment_date_is_kept_when_model_omits_date_id() -> None:
+    with respx.mock() as mock:
+        mock.post("http://127.0.0.1:8080/v1/chat/completions").respond(
+            200,
+            json=response(
+                {
+                    "tasks": [
+                        {"kind": "appointment", "evidence_ids": [2], "deadline_evidence_id": None}
+                    ]
+                }
+            ),
+        )
+        output = client.post("/api/actions", json={"text": NOTICE}).json()
+    assert output["tasks"][0]["calendar_date"] == "2026-11-20"
+    assert output["tasks"][0]["deadline_text"] == evidence_units(NOTICE)[2]
+
+
 def test_offline_and_no_action_are_distinct_and_never_persist_input(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -183,7 +201,7 @@ def test_offline_and_no_action_are_distinct_and_never_persist_input(
 
 def test_questions_use_only_selected_evidence_and_user_barriers() -> None:
     questions = [
-        "What other proof of income could I provide if I have no pay stub?",
+        "What other proof of income could I provide without a pay stub?",
         "How can I submit documents outside office hours?",
         "How can I confirm my documents arrive before the deadline?",
     ]
@@ -214,6 +232,8 @@ def test_questions_use_only_selected_evidence_and_user_barriers() -> None:
         "Can I send documents in December?",
         "Since I qualify, what happens next?",
         "Can I contact caseworker@example.com?",
+        "When will my request be closed if I do not submit proof of income?",
+        "How can I submit proof if I cannot access documents before the deadline?",
     ],
 )
 def test_questions_with_inventions_or_instructions_are_rejected(bad: str) -> None:
@@ -243,6 +263,7 @@ async def test_real_model_action_and_barrier_questions() -> None:
     assert {task.kind for task in output} >= {"documents", "appointment"}
     assert all(quote in NOTICE for task in output for quote in task.evidence)
     assert not any(task.kind == "payment" for task in output)
+    assert next(task for task in output if task.kind == "appointment").calendar_date == "2026-11-20"
     draft = await prepare_conversation(
         ConversationInput(
             source_text="\n".join(output[0].evidence),
@@ -254,3 +275,40 @@ async def test_real_model_action_and_barrier_questions() -> None:
         relevant in " ".join(draft.questions).lower()
         for relevant in ["hours", "stub", "proof", "work"]
     )
+    assert any(
+        word in " ".join(draft.questions).lower() for word in ["hours", "evening", "work", "online"]
+    )
+
+
+@pytest.mark.llm
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "notice,expected_kind",
+    [
+        (
+            "We are reviewing your request. No action is required at this time. "
+            "Your balance is $75.",
+            None,
+        ),
+        ("Please provide proof of income within 10 days of receiving this letter.", "documents"),
+        (
+            "Please pay $75 before November 20, 2026. Do not send original identity documents.",
+            "payment",
+        ),
+    ],
+)
+async def test_real_model_different_notice_types(notice: str, expected_kind: str | None) -> None:
+    try:
+        output = await extract_actions(notice)
+    except LocalAIError:
+        # For informational text, an honestly refused suggestion is also safe.
+        # The other cases must succeed; an offline runtime cannot pass the suite.
+        if expected_kind is None:
+            return
+        raise
+    if expected_kind is None:
+        assert output == []
+    else:
+        assert {task.kind for task in output} == {expected_kind}
+        if "within" in notice:
+            assert output[0].calendar_date is None

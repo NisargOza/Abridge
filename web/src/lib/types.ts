@@ -93,6 +93,42 @@ export interface DocumentResult {
   original: string;
   message: string;
 }
+export type ActionKind = "documents" | "appointment" | "contact" | "payment";
+export interface NoticeAction {
+  kind: ActionKind;
+  evidence: string[];
+  deadline_text: string | null;
+  calendar_date: string | null;
+}
+export interface ActionResult {
+  mode: "local_ai" | "unavailable";
+  tasks: NoticeAction[];
+  message: string;
+}
+export interface ConversationInput {
+  source_text: string;
+  situation: string;
+  audience: "sender" | "navigator";
+}
+export interface ConversationResult {
+  draft: { questions: string[] };
+}
+export interface ManagedTask extends NoticeAction {
+  id: string;
+  notice: string;
+  original: string;
+  completed: boolean;
+  situation: string;
+  audience: ConversationInput["audience"];
+  draft: string;
+}
+export interface PaperworkSession {
+  text: string;
+  name: string;
+  result: DocumentResult | null;
+  actions: (ActionResult & { original: string; name: string }) | null;
+  tasks: ManagedTask[];
+}
 export interface Explanation {
   items: {
     source_id: string;

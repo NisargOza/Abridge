@@ -1,6 +1,9 @@
 import type {
+  ActionResult,
   BudgetInput,
   BudgetResult,
+  ConversationInput,
+  ConversationResult,
   DocumentResult,
   Explanation,
   Health,
@@ -20,7 +23,9 @@ const request = async <T>(path: string, body?: unknown): Promise<T> => {
   pending.add(controller);
   const timeout = setTimeout(
     () => controller.abort(),
-    path === "/document" || path === "/explain" ? 125000 : 10000,
+    ["/document", "/explain", "/actions", "/conversation"].includes(path)
+      ? 125000
+      : 10000,
   );
   try {
     const response = await fetch(BASE + path, {
@@ -64,6 +69,9 @@ export const api = {
   screen: (household: Household) => request<Screening>("/screen", household),
   budget: (budget: BudgetInput) => request<BudgetResult>("/budget", budget),
   document: (text: string) => request<DocumentResult>("/document", { text }),
+  actions: (text: string) => request<ActionResult>("/actions", { text }),
+  conversation: (input: ConversationInput) =>
+    request<ConversationResult>("/conversation", input),
   explain: (household: Household) =>
     request<Explanation>("/explain", { household }),
 };

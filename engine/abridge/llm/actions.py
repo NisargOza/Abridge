@@ -114,6 +114,14 @@ async def extract_actions(original: str) -> list[VerifiedAction]:
                 raise LocalAIError("A date had no supporting action evidence. Check the notice.")
             deadline_text = units[task.deadline_evidence_id]
             calendar_date = explicit_date(deadline_text)
+        elif task.kind == "appointment" and re.search(
+            r"\bscheduled (?:for|on)\b|\b(?:appointment|interview) is on\b", primary, re.I
+        ):
+            # A model sometimes identifies the appointment but omits its date ID.
+            # Resolve only explicit scheduling wording in that same source sentence.
+            calendar_date = explicit_date(primary)
+            if calendar_date:
+                deadline_text = primary
         verified.append(
             VerifiedAction(
                 kind=task.kind,
@@ -146,6 +154,13 @@ async def prepare_conversation(data: ConversationInput) -> ConversationDraft:
             or not set(numeric_tokens(question)).issubset(allowed_numbers)
             or re.search(
                 r"\b(?:guaranteed|automatically approved|I qualify|I am eligible)\b", question, re.I
+            )
+            or re.search(r"\b(?:if|because|since) I\b", question, re.I)
+            or re.search(
+                r"\b(?:when|how soon)\b[^?]*\b(?:will|does|is)\b"
+                r"[^?]*\b(?:close[ds]?|terminate[ds]?|denied|approved|stopped)\b",
+                question,
+                re.I,
             )
         ):
             raise LocalAIError("The questions could not be checked. Try again or use the original.")

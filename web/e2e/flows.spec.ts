@@ -139,7 +139,8 @@ test("document route with real FastAPI and mocked local inference", async ({
   page,
 }) => {
   await page.goto("/");
-  await chooseTool(page, "Understand a document");
+  await chooseTool(page, "Paperwork & next steps");
+  await page.getByLabel("Read in plain words").check();
   await accessible(page);
   const notice =
     "You must pay $500 before October 31, 2026. If you do not reply, the case may close.";
@@ -175,10 +176,11 @@ test("mobile reflow, keyboard navigation and engine failure state", async ({
   await expect(
     page.getByRole("link", { name: "Skip to content" }),
   ).toBeFocused();
-  await chooseTool(page, "Understand a document");
+  await chooseTool(page, "Paperwork & next steps");
   await expect(
-    page.getByRole("heading", { name: "Plain words. A clearer next step." }),
+    page.getByRole("heading", { name: "Less paperwork. More progress." }),
   ).toBeFocused();
+  await page.getByLabel("Read in plain words").check();
   await accessible(page);
   await page
     .getByLabel("Document text")
