@@ -18,7 +18,7 @@ Build two connected capabilities inside the existing paperwork tool: (1) local A
 - [x] Integrate a focused paperwork workspace, session task management, and user-controlled exports without adding top-level navigation.
 - [x] Verify adversarial/ambiguous notices, offline behavior, real local model outputs, accessibility, mobile layout, and existing flows.
 - [x] Update concise setup/feature documentation, record limitations, and commit implementation milestones.
-- [ ] Push feature branch, open a reviewable PR, and leave localhost ready.
+- [x] Push feature branch, open [PR #5](https://github.com/NisargOza/Abridge/pull/5), and leave localhost ready with local AI.
 
 ## Impact and limits
 
