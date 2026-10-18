@@ -199,6 +199,46 @@ class DocumentResult(Boundary):
     message: str
 
 
+ActionKind = Literal["documents", "appointment", "contact", "payment"]
+
+
+class SuggestedAction(Boundary):
+    kind: ActionKind
+    evidence_ids: list[int] = Field(min_length=1, max_length=3)
+    deadline_evidence_id: int | None
+
+
+class ActionExtraction(Boundary):
+    tasks: list[SuggestedAction] = Field(max_length=8)
+
+
+class VerifiedAction(Boundary):
+    kind: ActionKind
+    evidence: list[str]
+    deadline_text: str | None
+    calendar_date: str | None
+
+
+class ActionResult(Boundary):
+    mode: Literal["local_ai", "unavailable"]
+    tasks: list[VerifiedAction]
+    message: str
+
+
+class ConversationInput(Boundary):
+    source_text: str = Field(min_length=1, max_length=18000)
+    situation: str = Field(max_length=1000, default="")
+    audience: Literal["sender", "navigator"] = "sender"
+
+
+class ConversationDraft(Boundary):
+    questions: list[str] = Field(min_length=2, max_length=5)
+
+
+class ConversationResult(Boundary):
+    draft: ConversationDraft
+
+
 class ExplanationInput(Boundary):
     household: Household
 

@@ -43,7 +43,9 @@ async def available() -> bool:
         return False
 
 
-async def generate[T: BaseModel](prompt_name: str, payload: str, schema: type[T]) -> T:
+async def generate[T: BaseModel](
+    prompt_name: str, payload: str, schema: type[T], *, max_tokens: int = 3500
+) -> T:
     prompt = (PROMPTS / f"{prompt_name}.txt").read_text()
     try:
         async with httpx.AsyncClient(timeout=120, trust_env=False) as client:
@@ -55,7 +57,7 @@ async def generate[T: BaseModel](prompt_name: str, payload: str, schema: type[T]
                         {"role": "user", "content": payload},
                     ],
                     "temperature": 0,
-                    "max_tokens": 3500,
+                    "max_tokens": max_tokens,
                     "response_format": {
                         "type": "json_schema",
                         "json_schema": {
